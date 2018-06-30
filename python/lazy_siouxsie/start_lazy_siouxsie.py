@@ -16,7 +16,7 @@ import threading
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
 from sgtk.platform.qt import QtCore, QtGui
-from .ui.dialog import Ui_Dialog
+from .ui.lazy_siouxsie_ui import Ui_lazySiouxsie
 
 def show_dialog(app_instance):
     """
@@ -28,11 +28,11 @@ def show_dialog(app_instance):
     
     # we pass the dialog class to this method and leave the actual construction
     # to be carried out by toolkit.
-    app_instance.engine.show_dialog("Starter Template App...", app_instance, AppDialog)
+    app_instance.engine.show_dialog("Lazy Siouxsie Auto Turntables...", app_instance, LazySiouxsie)
     
 
 
-class AppDialog(QtGui.QWidget):
+class LazySiouxsie(QtGui.QWidget):
     """
     Main application dialog window
     """
@@ -45,19 +45,12 @@ class AppDialog(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         
         # now load in the UI that was created in the UI designer
-        self.ui = Ui_Dialog() 
+        self.ui = Ui_lazySiouxsie()
         self.ui.setupUi(self)
         
         # most of the useful accessors are available through the Application class instance
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
-        
-        # via the self._app handle we can for example access:
-        # - The engine, via self._app.engine
-        # - A Shotgun API instance, via self._app.shotgun
-        # - A tk API instance, via self._app.tk 
-        
-        # lastly, set up our very basic UI
-        self.ui.context.setText("Current Context: %s" % self._app.context)
+
         
         

@@ -26,7 +26,7 @@ class StgkStarterApp(Application):
         # that resides inside the python folder in the app. This is where the actual UI
         # and business logic of the app is kept. By using the import_module command,
         # toolkit's code reload mechanism will work properly.
-        app_payload = self.import_module("app")
+        app_payload = self.import_module("lazy_siouxsie")
 
         # now register a *command*, which is normally a menu entry of some kind on a Shotgun
         # menu (but it depends on the engine). The engine will manage this command and 
@@ -34,7 +34,7 @@ class StgkStarterApp(Application):
 
         # first, set up our callback, calling out to a method inside the app module contained
         # in the python folder of the app
-        menu_callback = lambda : app_payload.dialog.show_dialog(self)
+        menu_callback = lambda : app_payload.start_lazy_siouxsie.show_dialog(self)
 
         # now register the command with the engine
         self.engine.register_command("Show Starter Template App...", menu_callback)
