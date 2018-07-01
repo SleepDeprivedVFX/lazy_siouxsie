@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide import QtCore, QtGui
+from sgtk.platform.qt import QtCore, QtGui
 
 class Ui_lazySiouxsie(object):
     def setupUi(self, lazySiouxsie):
