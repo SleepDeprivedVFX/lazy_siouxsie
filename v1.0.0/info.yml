@@ -25,6 +25,11 @@ configuration:
 #        default_value: False
 #        description: Turns on and off debug logging.
 #        allows_empty: True
+    hdri_path:
+        type: str
+        default_value: "C:/Users/sleep/OneDrive/Documents/resources/hdri"
+        description: A list of Studio HDRIs
+        allows_empty: True
 
 # this app works in all engines - it does not contain 
 # any host application specific commands

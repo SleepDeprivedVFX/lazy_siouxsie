@@ -38,5 +38,5 @@ class lazy_siouxsie(Application):
         menu_callback = lambda : app_payload.start_lazy_siouxsie.show_dialog(self)
 
         # now register the command with the engine
-        self.engine.register_command("Lazy Siouxsie...", menu_callback)
+        self.engine.register_command("Lazy Siouxsie Auto Turntables...", menu_callback)
         

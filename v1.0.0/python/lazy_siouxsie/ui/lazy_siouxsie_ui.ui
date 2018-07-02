@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>327</height>
+    <width>557</width>
+    <height>427</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,7 +31,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="file_path"/>
+      <widget class="QLineEdit" name="file_path">
+       <property name="placeholderText">
+        <string>The Current File to be sent to the farm</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -72,7 +76,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="custom_hdri"/>
+      <widget class="QLineEdit" name="custom_hdri">
+       <property name="placeholderText">
+        <string>If a show/shot specific HDRI is needed</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="browse_btn">
@@ -84,32 +92,223 @@
     </layout>
    </item>
    <item>
+    <widget class="QLabel" name="frame_statement">
+     <property name="text">
+      <string>The Start and End times are for the initial rotation.  A second rotation of equal time will be added to spin the HDRI around the object.  The Total Frames represents first and second rotations for each HDRI</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="startLabel">
        <property name="text">
-        <string>Start</string>
+        <string>Start Frame</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="startFrame"/>
+      <widget class="QSpinBox" name="startFrame">
+       <property name="maximum">
+        <number>50000</number>
+       </property>
+       <property name="value">
+        <number>1001</number>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="endLabel">
        <property name="text">
-        <string>End</string>
+        <string>End Frame</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="endFrame"/>
+      <widget class="QSpinBox" name="endFrame">
+       <property name="maximum">
+        <number>50000</number>
+       </property>
+       <property name="value">
+        <number>1120</number>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="total_frames"/>
+      <widget class="QLabel" name="totalFrameLabel">
+       <property name="text">
+        <string>Total Frames:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="total_frames">
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>240</string>
+       </property>
+       <property name="readOnly">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <widget class="QLabel" name="resolution_label">
+       <property name="text">
+        <string>Resolution</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="res_width">
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="maxLength">
+        <number>8</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="x_label">
+       <property name="text">
+        <string>X</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="res_height">
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="maxLength">
+        <number>8</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="res_scale">
+       <property name="currentIndex">
+        <number>3</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>25%</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>50%</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>75%</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100%</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>150%</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>200%</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QLabel" name="render_engine_label">
+       <property name="text">
+        <string>Rendering Engine</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="rendering_engine">
+       <item>
+        <property name="text">
+         <string>arnold</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>vray</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>redshift</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>renderman</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>mayasoftware</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
