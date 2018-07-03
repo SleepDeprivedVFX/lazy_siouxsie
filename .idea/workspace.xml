@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="45ddcecf-08c9-40b3-8eb8-41eef5babcfb" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/app.py" afterPath="$PROJECT_DIR$/v1.0.0/app.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/info.yml" afterPath="$PROJECT_DIR$/v1.0.0/info.yml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py" afterPath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py" afterPath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.ui" afterPath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.ui" />
@@ -25,8 +23,8 @@
       <file leaf-file-name="lazy_siouxsie_ui.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="250">
-              <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+            <state relative-caret-position="4525">
+              <caret line="181" column="55" lean-forward="true" selection-start-line="181" selection-start-column="55" selection-end-line="181" selection-end-column="55" />
               <folding />
             </state>
           </provider>
@@ -45,8 +43,8 @@
       <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="944">
-              <caret line="149" column="44" lean-forward="false" selection-start-line="149" selection-start-column="44" selection-end-line="149" selection-end-column="44" />
+            <state relative-caret-position="-500">
+              <caret line="43" column="43" lean-forward="false" selection-start-line="43" selection-start-column="43" selection-end-line="43" selection-end-column="43" />
               <folding>
                 <element signature="e#452#463#0" expanded="true" />
               </folding>
@@ -415,14 +413,28 @@
       <option name="project" value="LOCAL" />
       <updated>1530408119044</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Great progress made integrating shotgun">
+      <created>1530517629453</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1530517629453</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Got the save and select HDRIs to work">
+      <created>1530600603101</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1530600603101</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-11" y="-11" width="3262" height="2122" extended-state="6" />
     <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -449,7 +461,9 @@
     <MESSAGE value="Changed the version number" />
     <MESSAGE value="Changed the project name" />
     <MESSAGE value="Got this to work in Shotgun.  Had to move it to manual, and shift a few folders around." />
-    <option name="LAST_COMMIT_MESSAGE" value="Got this to work in Shotgun.  Had to move it to manual, and shift a few folders around." />
+    <MESSAGE value="Great progress made integrating shotgun" />
+    <MESSAGE value="Got the save and select HDRIs to work" />
+    <option name="LAST_COMMIT_MESSAGE" value="Got the save and select HDRIs to work" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -511,14 +525,6 @@
     <entry file="file://$PROJECT_DIR$/python/__init__.py" />
     <entry file="file://$PROJECT_DIR$/python/lazy_siouxsie/__init__.py" />
     <entry file="file://$PROJECT_DIR$/python/lazy_siouxsie/ui/__init__.py" />
-    <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="250">
-          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/app.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1000">
@@ -535,10 +541,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4525">
+          <caret line="181" column="55" lean-forward="true" selection-start-line="181" selection-start-column="55" selection-end-line="181" selection-end-column="55" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="944">
-          <caret line="149" column="44" lean-forward="false" selection-start-line="149" selection-start-column="44" selection-end-line="149" selection-end-column="44" />
+        <state relative-caret-position="-500">
+          <caret line="43" column="43" lean-forward="false" selection-start-line="43" selection-start-column="43" selection-end-line="43" selection-end-column="43" />
           <folding>
             <element signature="e#452#463#0" expanded="true" />
           </folding>

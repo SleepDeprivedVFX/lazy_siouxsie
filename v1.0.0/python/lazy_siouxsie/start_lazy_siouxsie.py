@@ -32,7 +32,22 @@ def show_dialog(app_instance):
     # we pass the dialog class to this method and leave the actual construction
     # to be carried out by toolkit.
     app_instance.engine.show_dialog("Lazy Siouxsie Auto Turntables...", app_instance, LazySiouxsie)
-    
+
+
+class lazySiouzsieSignals(QtCore.QObject):
+    progress = QtCore.Signal(int)
+
+
+class lazySiouxsieEngine(QtCore.QThread):
+    def __init__(self, parent=None):
+        QtCore.QThread.__init__(self, parent)
+        self.signal = lazySiouzsieSignals()
+
+    def run(self, *args, **kwargs):
+        self.spin_it()
+
+    def spin_it(self):
+        pass
 
 
 class LazySiouxsie(QtGui.QWidget):
@@ -40,12 +55,13 @@ class LazySiouxsie(QtGui.QWidget):
     Main application dialog window
     """
     
-    def __init__(self):
+    def __init__(self, parent=None):
         """
         Constructor
         """
         # first, call the base class and let it do its thing.
-        QtGui.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self, parent)
+        self.siouxsie = lazySiouxsieEngine()
         
         # now load in the UI that was created in the UI designer
         self.ui = Ui_lazySiouxsie()
@@ -95,10 +111,15 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.file(rn=next_file)
             cmds.file(s=True, type='mayaBinary')
             selected_hdri = self.get_hdri_files()
-            print selected_hdri
+
+            lights = self.find_lights()
 
             file_to_return = self.ui.file_path.text()
             cmds.file(file_to_return, o=True)
+
+    def find_lights(self):
+        # Need to get the render engine and search for lights based on that.
+        pass
 
     def get_hdri_files(self):
         hdri_files = []
