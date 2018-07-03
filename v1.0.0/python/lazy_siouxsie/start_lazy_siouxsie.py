@@ -13,6 +13,8 @@ import os
 import sys
 import threading
 from maya import cmds
+import glob
+import re
 
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
@@ -82,13 +84,31 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.res_width.setText(info['width'])
         self.ui.res_height.setText(info['height'])
 
-
     def cancel(self):
         self.close()
 
     def build_turn_table(self):
         # List tasks
-        task = self.find_turntable_task()
+        next_file = self.find_turntable_task()
+        if next_file:
+            cmds.file(s=True)
+            cmds.file(rn=next_file)
+            cmds.file(s=True, type='mayaBinary')
+            selected_hdri = self.get_hdri_files()
+            print selected_hdri
+
+            file_to_return = self.ui.file_path.text()
+            cmds.file(file_to_return, o=True)
+
+    def get_hdri_files(self):
+        hdri_files = []
+        files_list = self.ui.hdriList.selectedItems()
+        if files_list:
+            for hdri in files_list:
+                hdri_files.append(self.hdri_path + '/' + hdri.text())
+        if self.ui.custom_hdri.text():
+            hdri_files.append(self.ui.custom_hdri.text())
+        return hdri_files
 
     def browse(self):
         finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
@@ -118,15 +138,12 @@ class LazySiouxsie(QtGui.QWidget):
         fields = ['content']
         tasks = self.sg.shotgun.find('Task', filters, fields)
         template = self.sg.templates['asset_work_area_maya']
-        print template
         this_file = self.ui.file_path.text()
         path = os.path.dirname(this_file)
         # path = path.split('assets')[1]
         # path = 'assets' + path
         path = path.replace('\\', '/')
-        print path
         settings = template.get_fields(path)
-        print settings
         for task in tasks:
             content = task['content']
             task_id = task['id']
@@ -138,19 +155,30 @@ class LazySiouxsie(QtGui.QWidget):
                 turntable = None
                 turntable_id = None
         tt_path = path.replace(settings['task_name'], 'turntable.main')
-        template = self.sg.templates['maya_asset_work']
+        print tt_path
+        # template = self.sg.templates['maya_asset_work']
+        version_pattern = r'(_v\d*|_V\d*)'
         if turntable:
             # Find latest turntable task
             if os.path.isdir(tt_path):
-                files = os.listdir(tt_path)
+                files = glob.glob('%s/*[0-9]*' % tt_path)
                 if files:
                     files.sort()
-                    for f in files:
-                        check_file = os.path.join(tt_path, f)
-                        if os.path.isfile(check_file):
-                            print check_file
+                    last_file = files[-1]
+                    basename = os.path.basename(last_file)
+                    version_string = re.search(version_pattern, basename)
+                    last_version = version_string.group().lower()
+                    version_number = int(last_version.strip('_v'))
+                    next_version = version_number + 1
+                    version_number = str(version_number)
+                    next_version = str(next_version)
+                    version = last_version.replace(version_number, next_version)
+                    next_file = last_file.replace(last_version, version)
+                else:
+                    next_file = '%s/%s_turntable.main_v001.mb' % (tt_path, settings['Asset'])
             else:
                 os.makedirs(tt_path)
+                next_file = '%s/%s_turntable.main_v001.mb' % (tt_path, settings['Asset'])
         else:
             # Create Turntable Task
             filters = [
@@ -158,7 +186,6 @@ class LazySiouxsie(QtGui.QWidget):
             ]
             fields = ['id']
             step = self.sg.shotgun.find_one('Step', filters, fields)
-            print step
             task_data = {
                 'project': {'type': 'Project', 'id': self.project_id},
                 'entity': {'type': 'Asset', 'id': self.entity_id},
@@ -168,6 +195,8 @@ class LazySiouxsie(QtGui.QWidget):
             new_task = self.sg.shotgun.create('Task', task_data)
             if not os.path.isdir(tt_path):
                 os.makedirs(tt_path)
+                next_file = '%s/%s_turntable.main_v001.mb' % (tt_path, settings['Asset'])
+        return next_file
 
             # publish_data = {
             #     'project': {'type': 'Project', 'id': proj_id},
