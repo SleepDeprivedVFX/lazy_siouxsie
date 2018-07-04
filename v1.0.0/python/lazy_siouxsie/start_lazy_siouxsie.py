@@ -36,7 +36,6 @@ def show_dialog(app_instance):
     app_instance.engine.show_dialog("Lazy Siouxsie Auto Turntables...", app_instance, LazySiouxsie)
 
 
-
 class LazySiouxsie(QtGui.QWidget):
     """
     Main application dialog window
@@ -89,6 +88,16 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.res_width.setText(info['width'])
         self.ui.res_height.setText(info['height'])
         self.ui.build_progress.setValue(0)
+        self.ui.total_frames.setEnabled(False)
+        self.ui.startFrame.valueChanged.connect(self.set_frames)
+        self.ui.endFrame.valueChanged.connect(self.set_frames)
+
+    def set_frames(self):
+        start = self.ui.startFrame.value()
+        end = self.ui.endFrame.value()
+        dif = (end - start) + 1
+        total_frames = dif * 2
+        self.ui.total_frames.setText(str(total_frames))
 
     def cancel(self):
         self.close()
@@ -111,11 +120,27 @@ class LazySiouxsie(QtGui.QWidget):
             # Setup the camera bit
             self.ui.build_progress.setValue(10)
             self.ui.status_label.setText('Building the Turntable Camera...')
-            start = int(self.ui.startFrame.text())
-            end = int(self.ui.endFrame.text())
-            camera = self.build_camera(start=start, end=end)
+            start = self.ui.startFrame.value()
+            end = self.ui.endFrame.value()
+            camera_data = self.build_camera(start=start, end=end)
+            center = camera_data[1]
+
+            self.ui.build_progress.setValue(24)
+            self.ui.status_label.setText('Set frame ranges...')
+            total_frames = int(self.ui.total_frames.text())
+            add_frames = total_frames/2
+            end += add_frames
+            cmds.playbackOptions(min=start, max=end)
             # Get the rendering engine
-            rendering_engine = self.ui.rendering_engine.currentIndex()
+            self.ui.build_progress.setValue(25)
+            self.ui.status_label.setText('Get the rendering engine...')
+            rendering_engine = self.ui.rendering_engine.currentText()
+            lights = self.ui.scene_lights.isChecked()
+
+            self.ui.build_progress.setValue(26)
+            self.ui.status_label.setText('Build HDRI dome...')
+            hdri_dome = self.build_hdri_dome(renderer=rendering_engine, lights=lights, hdri_list=selected_hdri,
+                                             center=center)
             # Based on engine, setup layers and create HDRI lights
             # If there are lights in the scene, setup a light layer
             # Animate the HDRIs
@@ -133,6 +158,19 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.status_label.setText('Done!')
             sleep(3)
             self.cancel()
+
+    def build_hdri_dome(self, renderer=None, lights=None, hdri_list=None, center=None):
+        hdri = {}
+        print renderer
+        print lights
+        print hdri_list
+        print center
+        if renderer == 'arnold':
+            light = cmds.createNode('aiSkyDomeLight', n='HDRI_light')
+            hdri['dome'] = light
+            # cmds.setAttr('%s.')
+
+        return hdri
 
     def get_hdri_files(self):
         hdri_files = []
@@ -325,6 +363,6 @@ class LazySiouxsie(QtGui.QWidget):
         cmds.xform(piv=[x_center, y_center, z_center])
         cmds.setKeyframe('turn_table_rotate.ry', v=0.0, ott='linear', t=start)
         cmds.setKeyframe('turn_table_rotate.ry', v=360.0, itt='linear', t=end)
-        return cam
+        return [cam, bb_center]
 
 
