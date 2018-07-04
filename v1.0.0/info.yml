@@ -31,6 +31,12 @@ configuration:
         description: A list of Studio HDRIs
         allows_empty: True
 
+    turntable_task:
+        type: str
+        default_value: turntable.main
+        description: Set the task that is used in Shotgun
+        allows_empty: False
+
 # this app works in all engines - it does not contain 
 # any host application specific commands
 supported_engines: 
