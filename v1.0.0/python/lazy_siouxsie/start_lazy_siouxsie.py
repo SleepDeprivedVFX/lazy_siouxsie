@@ -15,7 +15,6 @@ import threading
 from maya import cmds
 import glob
 import re
-from time import sleep
 
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
@@ -35,19 +34,25 @@ def show_dialog(app_instance):
     app_instance.engine.show_dialog("Lazy Siouxsie Auto Turntables...", app_instance, LazySiouxsie)
 
 
-class lazySiouzsieSignals(QtCore.QObject):
-    progress = QtCore.Signal(int)
-    logs = QtCore.Signal(str)
-    save_it = QtCore.Signal(bool)
-    open_it = QtCore.Signal(bool)
-    operation = QtCore.Signal(str)
-    hold = QtCore.Signal(bool)
 
+class LazySiouxsie(QtGui.QWidget):
+    """
+    Main application dialog window
+    """
 
-class lazySiouxsieEngine(QtCore.QThread):
-    def __init__(self, parent=None):
-        QtCore.QThread.__init__(self, parent)
-        self.signal = lazySiouzsieSignals()
+    def __init__(self):
+        """
+        Constructor
+        """
+        # first, call the base class and let it do its thing.
+        QtGui.QWidget.__init__(self)
+
+        # now load in the UI that was created in the UI designer
+        self.ui = Ui_lazySiouxsie()
+        self.ui.setupUi(self)
+
+        # most of the useful accessors are available through the Application class instance
+        # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
 
         engine = self._app.engine
@@ -58,58 +63,73 @@ class lazySiouxsieEngine(QtCore.QThread):
         self.entity = self.context.entity['type']
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
-        self.file_path = None
-        self.hdri_list = None
-        self.custom_hdri = None
-        self.hold = True
 
-    def run(self, *args, **kwargs):
-        self.build_turn_table()
+        hdri_path = self._app.get_setting('hdri_path')
+        if os.path.exists(hdri_path):
+            self.hdri_path = hdri_path
+            files = os.listdir(hdri_path)
+            for f in files:
+                filepath = os.path.join(hdri_path, f)
+                if os.path.isfile(filepath):
+                    if f.endswith('.hdr') or f.endswith('.exr'):
+                        hdri = QtGui.QListWidgetItem(f)
+                        self.ui.hdriList.addItem(hdri)
+        file_to_send = cmds.file(q=True, sn=True)
+        self.ui.file_path.setText(file_to_send)
+        self.ui.file_path.setEnabled(False)
+        self.ui.cancel_btn.clicked.connect(self.cancel)
+        self.ui.spin_btn.clicked.connect(self.build_turn_table)
+        self.ui.browse_btn.clicked.connect(self.browse)
+        info = self.get_scene_details()
+        self.ui.res_width.setText(info['width'])
+        self.ui.res_height.setText(info['height'])
+
+    def cancel(self):
+        self.close()
 
     def build_turn_table(self):
         # List tasks
         next_file = self.find_turntable_task()
         if next_file:
-            # perhaps the savers and openers need to be signals sent to the ui
-            self.signal.save_it.emit(True)
-            dot_count = 1
-            while self.hold:
-                print '.' * dot_count
-                dot_count += 1
-                sleep(1)
-
-            self.hold = True
-            dot_count = 1
-            while self.hold:
-                print '.' * dot_count
-                dot_count += 1
-                sleep(1)
-            self.signal.operation.emit(next_file)
-
+            cmds.file(s=True)
+            cmds.file(rn=next_file)
+            cmds.file(s=True, type='mayaBinary')
             selected_hdri = self.get_hdri_files()
+            print selected_hdri
 
-            lights = self.find_lights()
-            self.hold = True
-            dot_count = 1
-            while self.hold:
-                print '.' * dot_count
-                dot_count += 1
-                sleep(1)
-            self.signal.open_it.emit(True)
-
-    def find_lights(self):
-        # Need to get the render engine and search for lights based on that.
-        pass
+            file_to_return = self.ui.file_path.text()
+            cmds.file(file_to_return, o=True)
 
     def get_hdri_files(self):
         hdri_files = []
-        files_list = self.hdri_list
+        files_list = self.ui.hdriList.selectedItems()
         if files_list:
             for hdri in files_list:
                 hdri_files.append(self.hdri_path + '/' + hdri.text())
-        if self.custom_hdri:
-            hdri_files.append(self.custom_hdri)
+        if self.ui.custom_hdri.text():
+            hdri_files.append(self.ui.custom_hdri.text())
         return hdri_files
+
+    def browse(self):
+        finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
+        if finder:
+            self.ui.custom_hdri.setText(finder[0])
+
+    def get_scene_details(self):
+        filters = [
+            ['name', 'is', self.project]
+        ]
+        fields = ['sg_renderers', 'sg_output_resolution', 'sg_frame_rate', 'sg_render_format', 'sg_pixel_aspect']
+        projectInfo = self.sg.shotgun.find_one("Project", filters, fields)
+        info = {}
+        resolution = projectInfo['sg_output_resolution']
+        info['width'] = resolution.split('x')[0]
+        info['height'] = resolution.split('x')[1]
+        info['frame_rate'] = projectInfo['sg_frame_rate']
+        info['render_format'] = projectInfo['sg_render_format']['name']
+        info['render_engine'] = projectInfo['sg_renderers'][0]['name']
+        info['aspect_ratio'] = projectInfo['sg_pixel_aspect']
+        return info
 
     def find_turntable_task(self):
         filters = [
@@ -118,13 +138,12 @@ class lazySiouxsieEngine(QtCore.QThread):
         fields = ['content']
         tasks = self.sg.shotgun.find('Task', filters, fields)
         template = self.sg.templates['asset_work_area_maya']
-        this_file = self.file_path
+        this_file = self.ui.file_path.text()
         path = os.path.dirname(this_file)
         # path = path.split('assets')[1]
         # path = 'assets' + path
         path = path.replace('\\', '/')
         settings = template.get_fields(path)
-        turntable = None
         for task in tasks:
             content = task['content']
             task_id = task['id']
@@ -178,111 +197,6 @@ class lazySiouxsieEngine(QtCore.QThread):
                 os.makedirs(tt_path)
                 next_file = '%s/%s_turntable.main_v001.mb' % (tt_path, settings['Asset'])
         return next_file
-
-
-class LazySiouxsie(QtGui.QWidget):
-    """
-    Main application dialog window
-    """
-    
-    def __init__(self, parent=None):
-        """
-        Constructor
-        """
-        # first, call the base class and let it do its thing.
-        QtGui.QWidget.__init__(self, parent)
-        self.siouxsie = lazySiouxsieEngine()
-        
-        # now load in the UI that was created in the UI designer
-        self.ui = Ui_lazySiouxsie()
-        self.ui.setupUi(self)
-        
-        # most of the useful accessors are available through the Application class instance
-        # it is often handy to keep a reference to this. You can get it via the following method:
-        self._app = sgtk.platform.current_bundle()
-
-        engine = self._app.engine
-        self.sg = engine.sgtk
-        self.context = engine.context
-        self.project = self.context.project['name']
-        self.project_id = self.context.project['id']
-        self.entity = self.context.entity['type']
-        self.task = self.context.task['name']
-        self.entity_id = self.context.entity['id']
-
-        self.siouxsie.signal.open_it.connect(self.open_it)
-        self.siouxsie.signal.save_it.connect(self.save_it)
-        self.siouxsie.signal.operation.connect(self.new_tt_file)
-
-        hdri_path = self._app.get_setting('hdri_path')
-        if os.path.exists(hdri_path):
-            self.hdri_path = hdri_path
-            files = os.listdir(hdri_path)
-            for f in files:
-                filepath = os.path.join(hdri_path, f)
-                if os.path.isfile(filepath):
-                    if f.endswith('.hdr') or f.endswith('.exr'):
-                        hdri = QtGui.QListWidgetItem(f)
-                        self.ui.hdriList.addItem(hdri)
-        file_to_send = cmds.file(q=True, sn=True)
-        self.ui.file_path.setText(file_to_send)
-        self.ui.file_path.setEnabled(False)
-        self.ui.cancel_btn.clicked.connect(self.cancel)
-        self.ui.spin_btn.clicked.connect(self.build_turn_table)
-        self.ui.browse_btn.clicked.connect(self.browse)
-        info = self.get_scene_details()
-        self.ui.res_width.setText(info['width'])
-        self.ui.res_height.setText(info['height'])
-
-    def build_turn_table(self):
-        if not self.siouxsie.isRunning():
-            self.siouxsie.file_path = self.ui.file_path.text()
-            self.siouxsie.hdri_list = self.ui.hdriList.selectedItems()
-            self.siouxsie.custom_hdri = self.ui.custom_hdri.text()
-            self.siouxsie.start()
-
-    def open_it(self, open_it):
-        if open_it:
-            file_to_open = self.ui.file_path.text()
-            cmds.file(file_to_open, o=True)
-            self.siouxsie.hold = False
-
-    def save_it(self, save_it):
-        if save_it:
-            cmds.file(s=True, type='mayaBinary')
-            self.siouxsie.hold = False
-
-    def new_tt_file(self, operator):
-        if operator:
-            cmds.file(rn=operator)
-            cmds.file(s=True, type='mayaBinary')
-            self.siouxsie.hold = False
-
-    def cancel(self):
-        self.close()
-
-    def get_scene_details(self):
-        filters = [
-            ['name', 'is', self.project]
-        ]
-        fields = ['sg_renderers', 'sg_output_resolution', 'sg_frame_rate', 'sg_render_format', 'sg_pixel_aspect']
-        projectInfo = self.sg.shotgun.find_one("Project", filters, fields)
-        info = {}
-        resolution = projectInfo['sg_output_resolution']
-        info['width'] = resolution.split('x')[0]
-        info['height'] = resolution.split('x')[1]
-        info['frame_rate'] = projectInfo['sg_frame_rate']
-        info['render_format'] = projectInfo['sg_render_format']['name']
-        info['render_engine'] = projectInfo['sg_renderers'][0]['name']
-        info['aspect_ratio'] = projectInfo['sg_pixel_aspect']
-        return info
-
-    def browse(self):
-        finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
-        if finder:
-            self.ui.custom_hdri.setText(finder[0])
-
-
 
             # publish_data = {
             #     'project': {'type': 'Project', 'id': proj_id},
