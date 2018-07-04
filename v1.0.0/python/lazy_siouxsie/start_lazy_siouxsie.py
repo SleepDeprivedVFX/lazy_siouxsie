@@ -15,6 +15,7 @@ import threading
 from maya import cmds
 import glob
 import re
+from time import sleep
 
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
@@ -36,6 +37,11 @@ def show_dialog(app_instance):
 
 class lazySiouzsieSignals(QtCore.QObject):
     progress = QtCore.Signal(int)
+    logs = QtCore.Signal(str)
+    save_it = QtCore.Signal(bool)
+    open_it = QtCore.Signal(bool)
+    operation = QtCore.Signal(str)
+    hold = QtCore.Signal(bool)
 
 
 class lazySiouxsieEngine(QtCore.QThread):
@@ -55,6 +61,7 @@ class lazySiouxsieEngine(QtCore.QThread):
         self.file_path = None
         self.hdri_list = None
         self.custom_hdri = None
+        self.hold = True
 
     def run(self, *args, **kwargs):
         self.build_turn_table()
@@ -63,15 +70,32 @@ class lazySiouxsieEngine(QtCore.QThread):
         # List tasks
         next_file = self.find_turntable_task()
         if next_file:
-            cmds.file(s=True)
-            cmds.file(rn=next_file)
-            cmds.file(s=True, type='mayaBinary')
+            # perhaps the savers and openers need to be signals sent to the ui
+            self.signal.save_it.emit(True)
+            dot_count = 1
+            while self.hold:
+                print '.' * dot_count
+                dot_count += 1
+                sleep(1)
+
+            self.hold = True
+            dot_count = 1
+            while self.hold:
+                print '.' * dot_count
+                dot_count += 1
+                sleep(1)
+            self.signal.operation.emit(next_file)
+
             selected_hdri = self.get_hdri_files()
 
             lights = self.find_lights()
-
-            file_to_return = self.file_path
-            cmds.file(file_to_return, o=True)
+            self.hold = True
+            dot_count = 1
+            while self.hold:
+                print '.' * dot_count
+                dot_count += 1
+                sleep(1)
+            self.signal.open_it.emit(True)
 
     def find_lights(self):
         # Need to get the render engine and search for lights based on that.
@@ -186,6 +210,10 @@ class LazySiouxsie(QtGui.QWidget):
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
 
+        self.siouxsie.signal.open_it.connect(self.open_it)
+        self.siouxsie.signal.save_it.connect(self.save_it)
+        self.siouxsie.signal.operation.connect(self.new_tt_file)
+
         hdri_path = self._app.get_setting('hdri_path')
         if os.path.exists(hdri_path):
             self.hdri_path = hdri_path
@@ -212,6 +240,23 @@ class LazySiouxsie(QtGui.QWidget):
             self.siouxsie.hdri_list = self.ui.hdriList.selectedItems()
             self.siouxsie.custom_hdri = self.ui.custom_hdri.text()
             self.siouxsie.start()
+
+    def open_it(self, open_it):
+        if open_it:
+            file_to_open = self.ui.file_path.text()
+            cmds.file(file_to_open, o=True)
+            self.siouxsie.hold = False
+
+    def save_it(self, save_it):
+        if save_it:
+            cmds.file(s=True, type='mayaBinary')
+            self.siouxsie.hold = False
+
+    def new_tt_file(self, operator):
+        if operator:
+            cmds.file(rn=operator)
+            cmds.file(s=True, type='mayaBinary')
+            self.siouxsie.hold = False
 
     def cancel(self):
         self.close()
