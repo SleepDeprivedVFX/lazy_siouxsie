@@ -12,6 +12,11 @@ import sgtk
 import os
 import sys
 import threading
+import maya.app.renderSetup.model.override as override
+import maya.app.renderSetup.model.selector as selector
+import maya.app.renderSetup.model.collection as collection
+import maya.app.renderSetup.model.renderLayer as renderLayer
+import maya.app.renderSetup.model.renderSetup as renderSetup
 from maya import cmds
 import glob
 import re
@@ -123,27 +128,82 @@ class LazySiouxsie(QtGui.QWidget):
             start = self.ui.startFrame.value()
             end = self.ui.endFrame.value()
             camera_data = self.build_camera(start=start, end=end)
+            camera = camera_data[0]
             center = camera_data[1]
+            bb = camera_data[2]
+            scene_max_width = camera_data[3]
+            x_min = bb[0]
+            y_min = bb[1]
+            z_min = bb[2]
+            x_max = bb[3]
+            y_max = bb[4]
+            z_max = bb[5]
 
             self.ui.build_progress.setValue(24)
             self.ui.status_label.setText('Set frame ranges...')
             total_frames = int(self.ui.total_frames.text())
             add_frames = total_frames/2
-            end += add_frames
-            cmds.playbackOptions(min=start, max=end)
+            extended_end = end + add_frames
+            cmds.playbackOptions(min=start, max=extended_end)
             # Get the rendering engine
             self.ui.build_progress.setValue(25)
             self.ui.status_label.setText('Get the rendering engine...')
             rendering_engine = self.ui.rendering_engine.currentText()
             lights = self.ui.scene_lights.isChecked()
 
+            # This will need some major renumbering
+            self.ui.build_progress.setValue(33)
+            self.ui.status_label.setText('Get scene lighting requirements...')
+            use_scene_lighting = self.ui.scene_lights.isChecked()
+            if use_scene_lighting:
+                self.ui.build_progress.setValue(35)
+                self.ui.status_label.setText('Get Scene Lights...')
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
+            else:
+                self.ui.build_progress.setValue(35)
+                self.ui.status_label.setText('Ignoring scene lights...')
+                get_scene_lights = None
+
             self.ui.build_progress.setValue(26)
             self.ui.status_label.setText('Build HDRI dome...')
             hdri_dome = self.build_hdri_dome(renderer=rendering_engine, lights=lights, hdri_list=selected_hdri,
                                              center=center)
-            # Based on engine, setup layers and create HDRI lights
-            # If there are lights in the scene, setup a light layer
-            # Animate the HDRIs
+            dome = hdri_dome['dome']
+            file_node = hdri_dome['file']
+            light_trans = hdri_dome['translation']
+
+            self.ui.build_progress.setValue(30)
+            self.ui.status_label.setText('Animating the HDRI dome...')
+            self.animate_dome(trans=light_trans, start=end, end=extended_end)
+
+            self.ui.build_progress.setValue(31)
+            self.ui.status_label.setText('Check groundplane setting...')
+            ground = self.ui.ground_plane.isChecked()
+            ground_plane = None
+            if ground:
+                self.ui.build_progress.setValue(31)
+                self.ui.status_label.setText('Building Ground Plane...')
+                radius = 10 * scene_max_width
+                if cmds.about(q=True, v=True) < '2018':
+                    ground_plane = cmds.polyPlane(h=radius, w=radius, ax=[0, 1, 0], ch=True, cuv=2,
+                                                  n='_turntable_ground_plane', sx=10, sy=20)
+                else:
+                    cmds.polyDisc(s=4, sm=4, sd=3, r=radius)
+                    cmds.rename('_turntable_ground_plane')
+                    ground_plane = cmds.ls(sl=True)[0]
+                self.ui.build_progress.setValue(32)
+                self.ui.status_label.setText('Set the plane Position...')
+                cmds.select(ground_plane, r=True)
+                cmds.setAttr('%s.tx' % ground_plane, center[0])
+                cmds.setAttr('%s.ty' % ground_plane, y_min)
+                cmds.setAttr('%s.tz' % ground_plane, center[2])
+
+            self.ui.build_progress.setValue(50)
+            self.ui.status_label.setText('Begin Layers Setup...')
+            render_layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane,
+                                                     light_trans=light_trans, hdri_list=selected_hdri,
+                                                     lights=get_scene_lights)
+
             # Setup the rendering setup
             # Send to the farm.
 
@@ -161,15 +221,38 @@ class LazySiouxsie(QtGui.QWidget):
 
     def build_hdri_dome(self, renderer=None, lights=None, hdri_list=None, center=None):
         hdri = {}
-        print renderer
-        print lights
-        print hdri_list
-        print center
         if renderer == 'arnold':
+            self.ui.build_progress.setValue(27)
+            self.ui.status_label.setText('Create Arnold SkyDome...')
             light = cmds.createNode('aiSkyDomeLight', n='HDRI_light')
+            self.ui.build_progress.setValue(28)
+            self.ui.status_label.setText('Get parent translation...')
+            cmds.pickWalk(d='up')
+            light_trans = cmds.ls(sl=True)[0]
+            self.ui.build_progress.setValue(29)
+            self.ui.status_label.setText('Connect Light to file...')
+            cmds.connectAttr('%s.instObjGroups' % light_trans, 'defaultLightSet.dagSetMembers', na=True)
+            file_node = cmds.createNode('file')
+            # The following will need to be setup by the list of HDRIs, BUT I need to get the file/light name returned.
+            # cmds.setAttr('%s.fileTextureName' % file_node,
+            #              r'\\elephant\SleepDeprived\Assets\Images\HDRI\CGSkies_0094_free.hdr', type='string')
+            cmds.connectAttr('%s.outColor' % file_node, '%s.color' % light, f=True)
             hdri['dome'] = light
-            # cmds.setAttr('%s.')
-
+            hdri['file'] = file_node
+            hdri['translation'] = light_trans
+        elif renderer == 'vray':
+            # Figure out the vray code...
+            pass
+        elif renderer == 'redshift':
+            # Figure out RedShift code
+            pass
+        elif renderer == 'renderman':
+            # Figure out RedShift code
+            pass
+        elif renderer == 'mayasoftware':
+            pass
+        cmds.select(light_trans, r=True)
+        cmds.xform(t=center, ws=True)
         return hdri
 
     def get_hdri_files(self):
@@ -181,6 +264,55 @@ class LazySiouxsie(QtGui.QWidget):
         if self.ui.custom_hdri.text():
             hdri_files.append(self.ui.custom_hdri.text())
         return hdri_files
+
+    def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
+                            lights=None):
+        rs = renderSetup.instance()
+        print dome
+        print file_node
+        print ground
+        print light_trans
+        print hdri_list
+        print lights
+        for hdri in hdri_list:
+            # Get the basic filename for the render layer name
+            basename = os.path.basename(hdri)
+            base = os.path.splitext(basename)[0]
+            print base
+            rl = rs.createRenderLayer(base)
+            c1 = rl.createCollection('Scene_%s' % base)
+            c1.getSelector().setPattern('_Turntable_Set_Prep')
+
+
+
+    def get_scene_lights(self, renderer=None):
+        lights = []
+        if renderer == 'arnold':
+            self.ui.build_progress.setValue(36)
+            self.ui.status_label.setText('Getting Arnold Lights...')
+            light_types = ['aiAreaLight', 'aiSkyDomeLight', 'aiMeshLight', 'aiPhotometricLight', 'aiLightPortal',
+                           'aiPhysicalSky']
+            for light in light_types:
+                type_list = cmds.ls(type=light)
+                for t in type_list:
+                    lights.append(t)
+        elif renderer == 'vray':
+            # Figure out the vray code...
+            pass
+        elif renderer == 'redshift':
+            # Figure out RedShift code
+            pass
+        elif renderer == 'renderman':
+            # Figure out RedShift code
+            pass
+        elif renderer == 'mayasoftware':
+            pass
+
+        self.ui.build_progress.setValue(39)
+        self.ui.status_label.setText('getting Maya Lights...')
+        for light in cmds.ls(lt=True):
+            lights.append(light)
+        return lights
 
     def browse(self):
         finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
@@ -243,11 +375,13 @@ class LazySiouxsie(QtGui.QWidget):
                     basename = os.path.basename(last_file)
                     version_string = re.search(version_pattern, basename)
                     last_version = version_string.group().lower()
-                    version_number = int(last_version.strip('_v'))
+                    version_number = last_version.strip('_v')
+                    version_count = len(version_number)
+                    version_number = int(version_number)
                     next_version = version_number + 1
-                    version_number = str(version_number)
-                    next_version = str(next_version)
-                    version = last_version.replace(version_number, next_version)
+                    version_number = str('{n:0{l}d}'.format(n=version_number, l=version_count))
+                    next_version_number = str('{n:0{l}d}'.format(n=next_version, l=version_count))
+                    version = last_version.replace(version_number, next_version_number)
                     next_file = last_file.replace(last_version, version)
                 else:
                     next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
@@ -287,9 +421,9 @@ class LazySiouxsie(QtGui.QWidget):
             z += 1
         self.ui.build_progress.setValue(12)
         self.ui.status_label.setText('Grouping the geometry...')
-        cmds.group(n='Set_prep')
+        cmds.group(n='_Turntable_Set_Prep')
         # Get the set/scene size from the bounding box
-        cmds.select('Set_prep')
+        cmds.select('_Turntable_Set_Prep')
         self.ui.build_progress.setValue(13)
         self.ui.status_label.setText('Getting scene center point...')
         scene_bb = cmds.xform(q=True, bb=True)
@@ -363,6 +497,10 @@ class LazySiouxsie(QtGui.QWidget):
         cmds.xform(piv=[x_center, y_center, z_center])
         cmds.setKeyframe('turn_table_rotate.ry', v=0.0, ott='linear', t=start)
         cmds.setKeyframe('turn_table_rotate.ry', v=360.0, itt='linear', t=end)
-        return [cam, bb_center]
+        return [cam, bb_center, scene_bb, max_hypotenuse]
 
+    def animate_dome(self, trans=None, start=None, end=None):
+        if trans:
+            cmds.setKeyframe('%s.ry' % trans, v=0.0, ott='linear', t=start)
+            cmds.setKeyframe('%s.ry' % trans, v=-360.0, itt='linear', t=end)
 

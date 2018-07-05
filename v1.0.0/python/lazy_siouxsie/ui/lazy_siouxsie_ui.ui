@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>557</width>
-    <height>529</height>
+    <height>708</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="subTitle">
      <property name="styleSheet">
       <string notr="true">font: 75 italic 10pt &quot;MS Shell Dlg 2&quot;;</string>
      </property>
@@ -41,13 +41,22 @@
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
       <widget class="QLabel" name="file_label">
+       <property name="toolTip">
+        <string>The current file being Turn Tabled</string>
+       </property>
        <property name="text">
         <string>File</string>
+       </property>
+       <property name="buddy">
+        <cstring>file_path</cstring>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLineEdit" name="file_path">
+       <property name="toolTip">
+        <string>The current file being Turn Tabled</string>
+       </property>
        <property name="placeholderText">
         <string>The Current File to be sent to the farm</string>
        </property>
@@ -59,16 +68,25 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="hdri_label">
+       <property name="toolTip">
+        <string>HDRII list provided by a Shotgun directory of Studio HDRIs</string>
+       </property>
        <property name="text">
         <string>HDRIs</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
        </property>
+       <property name="buddy">
+        <cstring>hdriList</cstring>
+       </property>
       </widget>
      </item>
      <item>
       <widget class="QListWidget" name="hdriList">
+       <property name="toolTip">
+        <string>HDRII list provided by a Shotgun directory of Studio HDRIs</string>
+       </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
        </property>
@@ -86,13 +104,22 @@
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="custom">
+       <property name="toolTip">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
        <property name="text">
         <string>Custom HDRI</string>
+       </property>
+       <property name="buddy">
+        <cstring>custom_hdri</cstring>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLineEdit" name="custom_hdri">
+       <property name="toolTip">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
        <property name="placeholderText">
         <string>If a show/shot specific HDRI is needed</string>
        </property>
@@ -100,6 +127,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="browse_btn">
+       <property name="toolTip">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
        <property name="text">
         <string>Browse</string>
        </property>
@@ -121,13 +151,22 @@
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="startLabel">
+       <property name="toolTip">
+        <string>Starting frame of Camera animation.</string>
+       </property>
        <property name="text">
         <string>Start Frame</string>
+       </property>
+       <property name="buddy">
+        <cstring>startFrame</cstring>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QSpinBox" name="startFrame">
+       <property name="toolTip">
+        <string>Starting frame of Camera animation.</string>
+       </property>
        <property name="maximum">
         <number>50000</number>
        </property>
@@ -138,13 +177,22 @@
      </item>
      <item>
       <widget class="QLabel" name="endLabel">
+       <property name="toolTip">
+        <string>End frame of the Camera Animation.  HDRI Spin will be added to this time</string>
+       </property>
        <property name="text">
         <string>End Frame</string>
+       </property>
+       <property name="buddy">
+        <cstring>endFrame</cstring>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QSpinBox" name="endFrame">
+       <property name="toolTip">
+        <string>End frame of the Camera Animation.  HDRI Spin will be added to this time</string>
+       </property>
        <property name="maximum">
         <number>50000</number>
        </property>
@@ -155,8 +203,14 @@
      </item>
      <item>
       <widget class="QLabel" name="totalFrameLabel">
+       <property name="toolTip">
+        <string>Total frames of animation is the Camera Rotation plus an HDRI rotation of the same value.  Thus, double the frames</string>
+       </property>
        <property name="text">
         <string>Total Frames:</string>
+       </property>
+       <property name="buddy">
+        <cstring>total_frames</cstring>
        </property>
       </widget>
      </item>
@@ -167,6 +221,9 @@
          <width>75</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Total frames of animation is the Camera Rotation plus an HDRI rotation of the same value.  Thus, double the frames</string>
        </property>
        <property name="text">
         <string>240</string>
@@ -195,8 +252,14 @@
     <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
       <widget class="QLabel" name="resolution_label">
+       <property name="toolTip">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
        <property name="text">
         <string>Resolution</string>
+       </property>
+       <property name="buddy">
+        <cstring>res_width</cstring>
        </property>
       </widget>
      </item>
@@ -207,6 +270,9 @@
          <width>120</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Resolution set by Shotgun if available</string>
        </property>
        <property name="maxLength">
         <number>8</number>
@@ -228,6 +294,9 @@
          <height>16777215</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
        <property name="maxLength">
         <number>8</number>
        </property>
@@ -235,6 +304,9 @@
      </item>
      <item>
       <widget class="QComboBox" name="res_scale">
+       <property name="toolTip">
+        <string>Resolution scale will change the final render size.</string>
+       </property>
        <property name="currentIndex">
         <number>3</number>
        </property>
@@ -289,8 +361,14 @@
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
       <widget class="QLabel" name="pixel_aspect_label">
+       <property name="toolTip">
+        <string>Pixel aspect set by Shotgun if it's available</string>
+       </property>
        <property name="text">
         <string>Pixel Aspect</string>
+       </property>
+       <property name="buddy">
+        <cstring>pixel_aspect</cstring>
        </property>
       </widget>
      </item>
@@ -301,6 +379,9 @@
          <width>60</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Pixel aspect set by Shotgun if it's available</string>
        </property>
        <property name="text">
         <string>1.0</string>
@@ -326,13 +407,22 @@
     <layout class="QHBoxLayout" name="horizontalLayout_7">
      <item>
       <widget class="QLabel" name="render_engine_label">
+       <property name="toolTip">
+        <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
+       </property>
        <property name="text">
         <string>Rendering Engine</string>
+       </property>
+       <property name="buddy">
+        <cstring>rendering_engine</cstring>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QComboBox" name="rendering_engine">
+       <property name="toolTip">
+        <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
+       </property>
        <item>
         <property name="text">
          <string>arnold</string>
@@ -373,13 +463,92 @@
        </property>
       </spacer>
      </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <widget class="QLabel" name="quality_label">
+       <property name="text">
+        <string>Quality</string>
+       </property>
+       <property name="buddy">
+        <cstring>quality_slider</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="quality_slider">
+       <property name="minimum">
+        <number>50</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>85</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="tickPosition">
+        <enum>QSlider::TicksBelow</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="quality_value">
+       <property name="value">
+        <number>85</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_9">
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item>
       <widget class="QCheckBox" name="scene_lights">
+       <property name="toolTip">
+        <string>When checked, any lights created in the scene will be rendered as one of the render passes.  Otherwise the existing lights will be ignored.</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
        <property name="text">
         <string>Use Scene Lights</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="ground_plane">
+       <property name="toolTip">
+        <string>Create a shadow catching ground plane</string>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>Ground Plane</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -439,6 +608,9 @@ QProgressBar::chunk {
      </item>
      <item>
       <widget class="QPushButton" name="spin_btn">
+       <property name="toolTip">
+        <string>Create the Turnable file and submit it.</string>
+       </property>
        <property name="text">
         <string>Spin It</string>
        </property>
@@ -449,5 +621,38 @@ QProgressBar::chunk {
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>quality_slider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>quality_value</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>413</x>
+     <y>526</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>517</x>
+     <y>531</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>quality_value</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>quality_slider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>518</x>
+     <y>543</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>425</x>
+     <y>545</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
