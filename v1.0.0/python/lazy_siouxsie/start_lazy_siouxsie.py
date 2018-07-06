@@ -17,6 +17,7 @@ import maya.app.renderSetup.model.selector as selector
 import maya.app.renderSetup.model.collection as collection
 import maya.app.renderSetup.model.renderLayer as renderLayer
 import maya.app.renderSetup.model.renderSetup as renderSetup
+import maya.app.renderSetup.views.overrideUtils as utils
 from maya import cmds
 import glob
 import re
@@ -268,22 +269,40 @@ class LazySiouxsie(QtGui.QWidget):
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
                             lights=None):
         rs = renderSetup.instance()
-        print dome
-        print file_node
-        print ground
-        print light_trans
-        print hdri_list
+        lights = list(lights)
         print lights
-        for hdri in hdri_list:
-            # Get the basic filename for the render layer name
-            basename = os.path.basename(hdri)
-            base = os.path.splitext(basename)[0]
-            print base
-            rl = rs.createRenderLayer(base)
-            c1 = rl.createCollection('Scene_%s' % base)
-            c1.getSelector().setPattern('_Turntable_Set_Prep')
 
+        # if lights:
+        #     render_layer = rs.createRenderLayer('Artist_Lights')
+        #     collection_set = render_layer.createCollection('geo')
+        #     collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
+        #     light_collection = render_layer.createCollection('lights')
+        #     light_list = ''
+        #     for light in lights:
+        #         light_list += '%s, ' % light
+        #     light_collection.getSelector().setPattern(light_list)
+        #     light_collection.
+        #     for light in lights:
+        #         cmds.select(light, r=True)
+        #         cmds.hide()
+        #     rs.switchToLayer(render_layer)
+        #     for light in lights:
+        #         utils.createAbsoluteOverride(light, 'visibility')
+        #         cmds.select(light, r=True)
+        #         cmds.setAttr('%s.visibility' % light, 1)
 
+        if hdri_list:
+            for hdri in hdri_list:
+                # Get the basic filename for the render layer name
+                basename = os.path.basename(hdri)
+                base = os.path.splitext(basename)[0]
+                render_layer = rs.createRenderLayer(base)
+                collection_set = render_layer.createCollection('Scene_%s' % base)
+                collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
+                rs.switchToLayer(render_layer)
+                utils.createAbsoluteOverride(file_node, 'fileTextureName')
+                cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
+        # rs.switchToLayer('defaultRenderLayer')
 
     def get_scene_lights(self, renderer=None):
         lights = []
