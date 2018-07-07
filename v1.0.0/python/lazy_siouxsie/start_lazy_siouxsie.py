@@ -8,6 +8,15 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+"""
+GOALS:
+1. Connect all of the other UI elements, Frame size, rate, aspect ratio
+2. Create the Gray and Mirror Balls
+3. Setup the quality and render settings
+4. Setup the Deadline script
+5. Get the lights layer working
+"""
+
 import sgtk
 import os
 import sys
@@ -270,19 +279,18 @@ class LazySiouxsie(QtGui.QWidget):
                             lights=None):
         rs = renderSetup.instance()
         lights = list(lights)
-        print lights
 
         if lights:
-            render_layer = rs.createRenderLayer('Artist_Lights')
-            print render_layer
-            collection_set = render_layer.createCollection('geo')
-            print collection_set
-            collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
-            light_collection = render_layer.createCollection('artist_lights')
-            light_list = ''
-            for light in lights:
-                light_list += '%s, ' % light
-            light_collection.getSelector().setPattern(light_list)
+            # TODO: Eventually, I need to get this working. For now it is disabled, but will hide all the lights.
+
+            # render_layer = rs.createRenderLayer('Artist_Lights')
+            # collection_set = render_layer.createCollection('geo')
+            # collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
+            # light_collection = render_layer.createCollection('artist_lights')
+            # light_list = ''
+            # for light in lights:
+            #     light_list += '%s, ' % light
+            # light_collection.getSelector().setPattern(light_list)
             # light_collection.setSelectorType('Lights')
 
             # light_collection.getSelector().set
@@ -290,12 +298,12 @@ class LazySiouxsie(QtGui.QWidget):
             for light in lights:
                 cmds.select(light, r=True)
                 cmds.hide()
-            rs.switchToLayer(render_layer)
+            # rs.switchToLayer(render_layer)
             # for light in lights:
-            utils.createAbsoluteOverride(light, 'visibility')
-
-            cmds.setAttr('visibility.attrValue', 1)
-            cmds.select(light, r=True)
+            # utils.createAbsoluteOverride(light, 'visibility')
+            #
+            # cmds.setAttr('visibility.attrValue', 1)
+            # cmds.select(light, r=True)
 
         if hdri_list:
             for hdri in hdri_list:

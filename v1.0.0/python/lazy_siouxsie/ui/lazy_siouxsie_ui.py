@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Wed Jul 04 23:02:11 2018
+# Created: Sat Jul 07 00:58:25 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -171,8 +171,9 @@ class Ui_lazySiouxsie(object):
         spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_9.addItem(spacerItem4)
         self.scene_lights = QtGui.QCheckBox(lazySiouxsie)
+        self.scene_lights.setEnabled(False)
         self.scene_lights.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.scene_lights.setChecked(True)
+        self.scene_lights.setChecked(False)
         self.scene_lights.setObjectName("scene_lights")
         self.horizontalLayout_9.addWidget(self.scene_lights)
         self.ground_plane = QtGui.QCheckBox(lazySiouxsie)
@@ -180,6 +181,10 @@ class Ui_lazySiouxsie(object):
         self.ground_plane.setChecked(True)
         self.ground_plane.setObjectName("ground_plane")
         self.horizontalLayout_9.addWidget(self.ground_plane)
+        self.chrome_balls = QtGui.QCheckBox(lazySiouxsie)
+        self.chrome_balls.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.chrome_balls.setObjectName("chrome_balls")
+        self.horizontalLayout_9.addWidget(self.chrome_balls)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -287,6 +292,7 @@ class Ui_lazySiouxsie(object):
         self.scene_lights.setText(QtGui.QApplication.translate("lazySiouxsie", "Use Scene Lights", None))
         self.ground_plane.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "Create a shadow catching ground plane", None))
         self.ground_plane.setText(QtGui.QApplication.translate("lazySiouxsie", "Ground Plane", None))
+        self.chrome_balls.setText(QtGui.QApplication.translate("lazySiouxsie", "Auto Chrome Balls", None))
         self.status_label.setText(QtGui.QApplication.translate("lazySiouxsie", "Ready...", None))
         self.cancel_btn.setText(QtGui.QApplication.translate("lazySiouxsie", "Cancel", None))
         self.spin_btn.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "Create the Turnable file and submit it.", None))

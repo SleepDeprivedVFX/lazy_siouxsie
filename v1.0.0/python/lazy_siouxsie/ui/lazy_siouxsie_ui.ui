@@ -522,6 +522,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="scene_lights">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="toolTip">
         <string>When checked, any lights created in the scene will be rendered as one of the render passes.  Otherwise the existing lights will be ignored.</string>
        </property>
@@ -532,7 +535,7 @@
         <string>Use Scene Lights</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
