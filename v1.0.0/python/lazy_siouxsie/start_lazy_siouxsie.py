@@ -254,7 +254,6 @@ class LazySiouxsie(QtGui.QWidget):
     def texture_chrome_balls(self, spheres=None, renderer=None):
         materials = {}
         if spheres:
-            print 'SHPERES: %s' % spheres
             chrome_transform = spheres[0][0]
             chrome_shape = spheres[0][1]
             gray_transform = spheres[1][0]
@@ -266,7 +265,7 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.hyperShade(a=chrome_surface)
                 cmds.select(gray_transform, r=True)
                 cmds.hyperShade(a=gray_surface)
-                cmds.select(chrome_surface, r=True)
+
                 cmds.setAttr('%s.metalness' % chrome_surface, 1)
                 cmds.setAttr('%s.base' % chrome_surface, 1)
                 cmds.setAttr('%s.baseColor' % chrome_surface, 1, 1, 1, type='double3')
@@ -279,33 +278,51 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.specular' % gray_surface, 1)
                 cmds.setAttr('%s.specularRoughness' % gray_surface, 0.65)
 
-            # setAttr
-            # "_turntable_gray_mat.specularRoughness"
-            # 0.3;
-            # setAttr
-            # "_turntable_gray_mat.specularRoughness"
-            # 0.65;
-            # setAttr
-            # "defaultArnoldRenderOptions.GIDiffuseSamples"
-            # 6;
-            # setAttr
-            # "defaultArnoldRenderOptions.GISpecularSamples"
-            # 4;
-            # setAttr
-            # "defaultArnoldRenderOptions.GITransmissionSamples"
-            # 4;
-            # setAttr
-            # "defaultArnoldRenderOptions.GISssSamples"
-            # 4;
-            # setAttr
-            # "defaultArnoldRenderOptions.GIVolumeSamples"
-            # 4;
-            # setAttr
-            # "defaultArnoldRenderOptions.AASamples"
-            # 12;
-            # setAttr
-            # "defaultArnoldRenderOptions.AASamples"
-            # 6;
+                materials['gray_shader'] = gray_surface
+                materials['chrome_shader'] = chrome_surface
+            elif renderer == 'vray':
+                pass
+            elif renderer == 'renderman':
+                pass
+            elif renderer == 'redshift':
+                pass
+            else:
+                gray_surface = cmds.shadingNode('blinn', asShader=True, n='_turntable_gray_mat')
+                chrome_surface = cmds.shadingNode('blinn', asShader=True, n='_turntable_chrome_mat')
+                cmds.select(chrome_transform, r=True)
+                cmds.hyperShade(a=chrome_surface)
+                cmds.select(gray_transform, r=True)
+                cmds.hyperShade(a=gray_surface)
+
+        return materials
+
+        # setAttr
+        # "_turntable_gray_mat.specularRoughness"
+        # 0.3;
+        # setAttr
+        # "_turntable_gray_mat.specularRoughness"
+        # 0.65;
+        # setAttr
+        # "defaultArnoldRenderOptions.GIDiffuseSamples"
+        # 6;
+        # setAttr
+        # "defaultArnoldRenderOptions.GISpecularSamples"
+        # 4;
+        # setAttr
+        # "defaultArnoldRenderOptions.GITransmissionSamples"
+        # 4;
+        # setAttr
+        # "defaultArnoldRenderOptions.GISssSamples"
+        # 4;
+        # setAttr
+        # "defaultArnoldRenderOptions.GIVolumeSamples"
+        # 4;
+        # setAttr
+        # "defaultArnoldRenderOptions.AASamples"
+        # 12;
+        # setAttr
+        # "defaultArnoldRenderOptions.AASamples"
+        # 6;
 
 
     def build_hdri_dome(self, renderer=None, lights=None, hdri_list=None, center=None):
