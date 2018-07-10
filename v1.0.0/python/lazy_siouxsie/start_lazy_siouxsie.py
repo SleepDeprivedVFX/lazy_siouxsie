@@ -208,11 +208,33 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.ty' % ground_plane, y_min)
                 cmds.setAttr('%s.tz' % ground_plane, center[2])
 
+            get_spheres = self.ui.chrome_balls.isChecked()
+            spheres = []
+            if get_spheres:
+                base_max_width = math.sqrt((math.pow((x_max - x_min), 2)) + (math.pow((y_max - y_min), 2)))
+                sphere_radius = ((y_max - y_min)/2) * 0.25
+                chrome_ball = cmds.polySphere(r=sphere_radius, n='_turntable_chrome_ball')
+                gray_ball = cmds.polySphere(r=sphere_radius, n='_turntable_gray_ball')
+
+                # positioning of the chrome balls
+                chrome_x_point = center[0] + ((base_max_width / 2) * .85)
+                gray_x_point = chrome_x_point + (sphere_radius * 2.2)
+                sphere_ground = y_min + sphere_radius
+                cmds.setAttr('%s.tx' % chrome_ball[0], chrome_x_point)
+                cmds.setAttr('%s.ty' % chrome_ball[0], sphere_ground)
+                cmds.setAttr('%s.tz' % chrome_ball[0], center[2])
+                cmds.setAttr('%s.tx' % gray_ball[0], gray_x_point)
+                cmds.setAttr('%s.ty' % gray_ball[0], sphere_ground)
+                cmds.setAttr('%s.tz' % gray_ball[0], center[2])
+                spheres.append(chrome_ball)
+                spheres.append(gray_ball)
+                materials = self.texture_chrome_balls(spheres=spheres, renderer=rendering_engine)
+                print materials
+
             self.ui.build_progress.setValue(50)
             self.ui.status_label.setText('Begin Layers Setup...')
-            render_layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane,
-                                                     light_trans=light_trans, hdri_list=selected_hdri,
-                                                     lights=get_scene_lights)
+            self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane, light_trans=light_trans,
+                                     hdri_list=selected_hdri, lights=get_scene_lights, balls=spheres)
 
             # Setup the rendering setup
             # Send to the farm.
@@ -228,6 +250,63 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.status_label.setText('Done!')
             sleep(3)
             self.cancel()
+
+    def texture_chrome_balls(self, spheres=None, renderer=None):
+        materials = {}
+        if spheres:
+            print 'SHPERES: %s' % spheres
+            chrome_transform = spheres[0][0]
+            chrome_shape = spheres[0][1]
+            gray_transform = spheres[1][0]
+            gray_shape = spheres[1][1]
+            if renderer == 'arnold':
+                gray_surface = cmds.shadingNode('aiStandardSurface', asShader=True, n='_turntable_gray_mat')
+                chrome_surface = cmds.shadingNode('aiStandardSurface', asShader=True, n='_turntable_chrome_mat')
+                cmds.select(chrome_transform, r=True)
+                cmds.hyperShade(a=chrome_surface)
+                cmds.select(gray_transform, r=True)
+                cmds.hyperShade(a=gray_surface)
+                cmds.select(chrome_surface, r=True)
+                cmds.setAttr('%s.metalness' % chrome_surface, 1)
+                cmds.setAttr('%s.base' % chrome_surface, 1)
+                cmds.setAttr('%s.baseColor' % chrome_surface, 1, 1, 1, type='double3')
+                cmds.setAttr('%s.specular' % chrome_surface, 0)
+                cmds.setAttr('%s.specularAnisotropy' % chrome_surface, 0.5)
+
+                cmds.setAttr('%s.base' % gray_surface, 1)
+                cmds.setAttr('%s.baseColor' % gray_surface, 0.5, 0.5, 0.5, type='double3')
+                cmds.setAttr('%s.specularColor' % gray_surface, 0.5, 0.5, 0.5, type='double3')
+                cmds.setAttr('%s.specular' % gray_surface, 1)
+                cmds.setAttr('%s.specularRoughness' % gray_surface, 0.65)
+
+            # setAttr
+            # "_turntable_gray_mat.specularRoughness"
+            # 0.3;
+            # setAttr
+            # "_turntable_gray_mat.specularRoughness"
+            # 0.65;
+            # setAttr
+            # "defaultArnoldRenderOptions.GIDiffuseSamples"
+            # 6;
+            # setAttr
+            # "defaultArnoldRenderOptions.GISpecularSamples"
+            # 4;
+            # setAttr
+            # "defaultArnoldRenderOptions.GITransmissionSamples"
+            # 4;
+            # setAttr
+            # "defaultArnoldRenderOptions.GISssSamples"
+            # 4;
+            # setAttr
+            # "defaultArnoldRenderOptions.GIVolumeSamples"
+            # 4;
+            # setAttr
+            # "defaultArnoldRenderOptions.AASamples"
+            # 12;
+            # setAttr
+            # "defaultArnoldRenderOptions.AASamples"
+            # 6;
+
 
     def build_hdri_dome(self, renderer=None, lights=None, hdri_list=None, center=None):
         hdri = {}
@@ -276,9 +355,9 @@ class LazySiouxsie(QtGui.QWidget):
         return hdri_files
 
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
-                            lights=None):
+                            lights=[], balls=[]):
         rs = renderSetup.instance()
-        lights = list(lights)
+        # lights = list(lights)
 
         if lights:
             # TODO: Eventually, I need to get this working. For now it is disabled, but will hide all the lights.
@@ -305,6 +384,10 @@ class LazySiouxsie(QtGui.QWidget):
             # cmds.setAttr('visibility.attrValue', 1)
             # cmds.select(light, r=True)
 
+        chrome_balls = ''
+        if balls:
+            for ball in balls:
+                chrome_balls = '%s, %s' % (chrome_balls, ball[0])
         if hdri_list:
             for hdri in hdri_list:
                 # Get the basic filename for the render layer name
@@ -312,7 +395,7 @@ class LazySiouxsie(QtGui.QWidget):
                 base = os.path.splitext(basename)[0]
                 render_layer = rs.createRenderLayer(base)
                 collection_set = render_layer.createCollection('Scene_%s' % base)
-                collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
+                collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
@@ -528,12 +611,12 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.status_label.setText('Animating the camera...')
         cmds.group(n='turn_table_rotate')
         cmds.xform(piv=[x_center, y_center, z_center])
-        cmds.setKeyframe('turn_table_rotate.ry', v=0.0, ott='linear', t=start)
-        cmds.setKeyframe('turn_table_rotate.ry', v=360.0, itt='linear', t=end)
+        cmds.setKeyframe('turn_table_rotate.ry', v=25, ott='linear', t=start)
+        cmds.setKeyframe('turn_table_rotate.ry', v=385.0, itt='linear', t=end)
         return [cam, bb_center, scene_bb, max_hypotenuse]
 
     def animate_dome(self, trans=None, start=None, end=None):
         if trans:
-            cmds.setKeyframe('%s.ry' % trans, v=0.0, ott='linear', t=start)
-            cmds.setKeyframe('%s.ry' % trans, v=-360.0, itt='linear', t=end)
+            cmds.setKeyframe('%s.ry' % trans, v=25, ott='linear', t=start)
+            cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
 

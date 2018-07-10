@@ -19,14 +19,14 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.5030153">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
           <file leaf-file-name="lazy_siouxsie_ui.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="375">
-                  <caret line="15" column="63" lean-forward="true" selection-start-line="15" selection-start-column="63" selection-end-line="15" selection-end-column="63" />
+                <state relative-caret-position="7525">
+                  <caret line="301" column="0" lean-forward="false" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -45,16 +45,19 @@
           <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="400">
-                  <caret line="16" column="31" lean-forward="false" selection-start-line="16" selection-start-column="31" selection-end-line="16" selection-end-column="31" />
+                <state relative-caret-position="699">
+                  <caret line="279" column="73" lean-forward="true" selection-start-line="279" selection-start-column="73" selection-end-line="279" selection-end-column="73" />
                   <folding>
                     <element signature="e#678#689#0" expanded="true" />
                     <element signature="e#4448#4460#0" expanded="false" />
-                    <element signature="e#9925#11551#0" expanded="false" />
-                    <element signature="e#15066#15213#0" expanded="false" />
-                    <element signature="e#15256#15964#0" expanded="false" />
-                    <element signature="e#16009#19442#0" expanded="false" />
-                    <element signature="e#24135#24297#0" expanded="false" />
+                    <element signature="e#13625#15251#0" expanded="false" />
+                    <element signature="e#15291#15612#0" expanded="false" />
+                    <element signature="e#15780#17831#0" expanded="false" />
+                    <element signature="e#17888#18905#0" expanded="false" />
+                    <element signature="e#18937#19084#0" expanded="false" />
+                    <element signature="e#19127#19835#0" expanded="false" />
+                    <element signature="e#19880#23313#0" expanded="false" />
+                    <element signature="e#23369#27933#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -89,18 +92,19 @@
           <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="6650">
-                  <caret line="313" column="80" lean-forward="false" selection-start-line="313" selection-start-column="80" selection-end-line="313" selection-end-column="80" />
+                <state relative-caret-position="7850">
+                  <caret line="357" column="49" lean-forward="false" selection-start-line="357" selection-start-column="49" selection-end-line="357" selection-end-column="49" />
                   <folding>
                     <element signature="e#678#689#0" expanded="true" />
                     <element signature="e#4448#4460#0" expanded="false" />
-                    <element signature="e#9925#11551#0" expanded="false" />
-                    <element signature="e#15066#15213#0" expanded="false" />
-                    <element signature="e#15256#15964#0" expanded="false" />
-                    <element signature="e#16009#19442#0" expanded="false" />
-                    <element signature="e#24135#24297#0" expanded="false" />
-                    <marker date="1530950468059" expanded="true" signature="12264:13245" ph="..." />
-                    <marker date="1530950468059" expanded="true" signature="12921:12992" ph="..." />
+                    <element signature="e#13625#15251#0" expanded="false" />
+                    <element signature="e#15291#15612#0" expanded="false" />
+                    <element signature="e#15780#17831#0" expanded="false" />
+                    <element signature="e#17888#18905#0" expanded="false" />
+                    <element signature="e#18937#19084#0" expanded="false" />
+                    <element signature="e#19127#19835#0" expanded="false" />
+                    <element signature="e#19880#23313#0" expanded="false" />
+                    <element signature="e#23369#27933#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -109,7 +113,7 @@
           <file leaf-file-name="renderSetup.py" pinned="false" current-in-tab="false">
             <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/renderSetup.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="624">
+                <state relative-caret-position="6425">
                   <caret line="257" column="41" lean-forward="false" selection-start-line="257" selection-start-column="35" selection-end-line="257" selection-end-column="41" />
                   <folding />
                 </state>
@@ -119,7 +123,7 @@
           <file leaf-file-name="renderLayer.py" pinned="false" current-in-tab="false">
             <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/renderLayer.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="624">
+                <state relative-caret-position="24050">
                   <caret line="962" column="40" lean-forward="false" selection-start-line="962" selection-start-column="24" selection-end-line="962" selection-end-column="40" />
                   <folding />
                 </state>
@@ -129,7 +133,7 @@
           <file leaf-file-name="collection.py" pinned="false" current-in-tab="true">
             <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/collection.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-1536">
+                <state relative-caret-position="400">
                   <caret line="587" column="8" lean-forward="false" selection-start-line="587" selection-start-column="8" selection-end-line="587" selection-end-column="8" />
                   <folding />
                 </state>
@@ -149,6 +153,7 @@
       <find>filter</find>
       <find>createCollection</find>
       <find>, QtGui.QApplication.UnicodeUTF8</find>
+      <find>renderer</find>
     </findStrings>
     <replaceStrings>
       <replace>/</replace>
@@ -195,7 +200,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -280,6 +284,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -580,14 +585,21 @@
       <option name="project" value="LOCAL" />
       <updated>1530950094019</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Updated UI with chrome and mirror balls.  Disabled the Scene Lights option.  Set goals for the next steps toward completion">
+      <created>1530950541710</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1530950541710</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-11" y="-11" width="3262" height="2122" extended-state="6" />
     <editor active="false" />
     <layout>
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12993827" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12993827" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -626,7 +638,8 @@
     <MESSAGE value="HDRI overrides are working for all layers.  Need to figure out how to turn off the default layer, set individual light overrides and then add all the other render setups." />
     <MESSAGE value="Added Color Ball Check box." />
     <MESSAGE value="Made some, but bad progress on the light setup." />
-    <option name="LAST_COMMIT_MESSAGE" value="Made some, but bad progress on the light setup." />
+    <MESSAGE value="Updated UI with chrome and mirror balls.  Disabled the Scene Lights option.  Set goals for the next steps toward completion" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated UI with chrome and mirror balls.  Disabled the Scene Lights option.  Set goals for the next steps toward completion" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -642,11 +655,14 @@
           <folding>
             <element signature="e#678#689#0" expanded="true" />
             <element signature="e#4448#4460#0" expanded="false" />
-            <element signature="e#9925#11551#0" expanded="false" />
-            <element signature="e#15066#15213#0" expanded="false" />
-            <element signature="e#15256#15964#0" expanded="false" />
-            <element signature="e#16009#19442#0" expanded="false" />
-            <element signature="e#24135#24297#0" expanded="false" />
+            <element signature="e#13625#15251#0" expanded="false" />
+            <element signature="e#15291#15612#0" expanded="false" />
+            <element signature="e#15780#17831#0" expanded="false" />
+            <element signature="e#17888#18905#0" expanded="false" />
+            <element signature="e#18937#19084#0" expanded="false" />
+            <element signature="e#19127#19835#0" expanded="false" />
+            <element signature="e#19880#23313#0" expanded="false" />
+            <element signature="e#23369#27933#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -692,11 +708,14 @@
           <folding>
             <element signature="e#678#689#0" expanded="true" />
             <element signature="e#4448#4460#0" expanded="false" />
-            <element signature="e#9925#11551#0" expanded="false" />
-            <element signature="e#15066#15213#0" expanded="false" />
-            <element signature="e#15256#15964#0" expanded="false" />
-            <element signature="e#16009#19442#0" expanded="false" />
-            <element signature="e#24135#24297#0" expanded="false" />
+            <element signature="e#13625#15251#0" expanded="false" />
+            <element signature="e#15291#15612#0" expanded="false" />
+            <element signature="e#15780#17831#0" expanded="false" />
+            <element signature="e#17888#18905#0" expanded="false" />
+            <element signature="e#18937#19084#0" expanded="false" />
+            <element signature="e#19127#19835#0" expanded="false" />
+            <element signature="e#19880#23313#0" expanded="false" />
+            <element signature="e#23369#27933#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -724,11 +743,14 @@
           <folding>
             <element signature="e#678#689#0" expanded="true" />
             <element signature="e#4448#4460#0" expanded="false" />
-            <element signature="e#9925#11551#0" expanded="false" />
-            <element signature="e#15066#15213#0" expanded="false" />
-            <element signature="e#15256#15964#0" expanded="false" />
-            <element signature="e#16009#19442#0" expanded="false" />
-            <element signature="e#24135#24297#0" expanded="false" />
+            <element signature="e#13625#15251#0" expanded="false" />
+            <element signature="e#15291#15612#0" expanded="false" />
+            <element signature="e#15780#17831#0" expanded="false" />
+            <element signature="e#17888#18905#0" expanded="false" />
+            <element signature="e#18937#19084#0" expanded="false" />
+            <element signature="e#19127#19835#0" expanded="false" />
+            <element signature="e#19880#23313#0" expanded="false" />
+            <element signature="e#23369#27933#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -782,11 +804,14 @@
           <folding>
             <element signature="e#678#689#0" expanded="true" />
             <element signature="e#4448#4460#0" expanded="false" />
-            <element signature="e#9925#11551#0" expanded="false" />
-            <element signature="e#15066#15213#0" expanded="false" />
-            <element signature="e#15256#15964#0" expanded="false" />
-            <element signature="e#16009#19442#0" expanded="false" />
-            <element signature="e#24135#24297#0" expanded="false" />
+            <element signature="e#13625#15251#0" expanded="false" />
+            <element signature="e#15291#15612#0" expanded="false" />
+            <element signature="e#15780#17831#0" expanded="false" />
+            <element signature="e#17888#18905#0" expanded="false" />
+            <element signature="e#18937#19084#0" expanded="false" />
+            <element signature="e#19127#19835#0" expanded="false" />
+            <element signature="e#19880#23313#0" expanded="false" />
+            <element signature="e#23369#27933#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -814,11 +839,14 @@
           <folding>
             <element signature="e#678#689#0" expanded="true" />
             <element signature="e#4448#4460#0" expanded="false" />
-            <element signature="e#9925#11551#0" expanded="false" />
-            <element signature="e#15066#15213#0" expanded="false" />
-            <element signature="e#15256#15964#0" expanded="false" />
-            <element signature="e#16009#19442#0" expanded="false" />
-            <element signature="e#24135#24297#0" expanded="false" />
+            <element signature="e#13625#15251#0" expanded="false" />
+            <element signature="e#15291#15612#0" expanded="false" />
+            <element signature="e#15780#17831#0" expanded="false" />
+            <element signature="e#17888#18905#0" expanded="false" />
+            <element signature="e#18937#19084#0" expanded="false" />
+            <element signature="e#19127#19835#0" expanded="false" />
+            <element signature="e#19880#23313#0" expanded="false" />
+            <element signature="e#23369#27933#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -889,7 +917,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -897,13 +924,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="94">
           <caret line="5" column="4" lean-forward="true" selection-start-line="5" selection-start-column="4" selection-end-line="5" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/renderSetup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="624">
+        <state relative-caret-position="6425">
           <caret line="257" column="41" lean-forward="false" selection-start-line="257" selection-start-column="35" selection-end-line="257" selection-end-column="41" />
           <folding />
         </state>
@@ -911,7 +937,7 @@
     </entry>
     <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/renderLayer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="624">
+        <state relative-caret-position="24050">
           <caret line="962" column="40" lean-forward="false" selection-start-line="962" selection-start-column="24" selection-end-line="962" selection-end-column="40" />
           <folding />
         </state>
@@ -919,7 +945,7 @@
     </entry>
     <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/collection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1536">
+        <state relative-caret-position="400">
           <caret line="587" column="8" lean-forward="false" selection-start-line="587" selection-start-column="8" selection-end-line="587" selection-end-column="8" />
           <folding />
         </state>
@@ -927,24 +953,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="15" column="63" lean-forward="true" selection-start-line="15" selection-start-column="63" selection-end-line="15" selection-end-column="63" />
+        <state relative-caret-position="7525">
+          <caret line="301" column="0" lean-forward="false" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="16" column="31" lean-forward="false" selection-start-line="16" selection-start-column="31" selection-end-line="16" selection-end-column="31" />
+        <state relative-caret-position="699">
+          <caret line="279" column="73" lean-forward="true" selection-start-line="279" selection-start-column="73" selection-end-line="279" selection-end-column="73" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
             <element signature="e#4448#4460#0" expanded="false" />
-            <element signature="e#9925#11551#0" expanded="false" />
-            <element signature="e#15066#15213#0" expanded="false" />
-            <element signature="e#15256#15964#0" expanded="false" />
-            <element signature="e#16009#19442#0" expanded="false" />
-            <element signature="e#24135#24297#0" expanded="false" />
+            <element signature="e#13625#15251#0" expanded="false" />
+            <element signature="e#15291#15612#0" expanded="false" />
+            <element signature="e#15780#17831#0" expanded="false" />
+            <element signature="e#17888#18905#0" expanded="false" />
+            <element signature="e#18937#19084#0" expanded="false" />
+            <element signature="e#19127#19835#0" expanded="false" />
+            <element signature="e#19880#23313#0" expanded="false" />
+            <element signature="e#23369#27933#0" expanded="false" />
           </folding>
         </state>
       </provider>

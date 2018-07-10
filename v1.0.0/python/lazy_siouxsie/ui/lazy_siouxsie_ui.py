@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Sat Jul 07 00:58:25 2018
+# Created: Sat Jul 07 15:24:01 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -183,6 +183,7 @@ class Ui_lazySiouxsie(object):
         self.horizontalLayout_9.addWidget(self.ground_plane)
         self.chrome_balls = QtGui.QCheckBox(lazySiouxsie)
         self.chrome_balls.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.chrome_balls.setChecked(True)
         self.chrome_balls.setObjectName("chrome_balls")
         self.horizontalLayout_9.addWidget(self.chrome_balls)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
