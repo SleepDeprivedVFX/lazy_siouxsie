@@ -57,6 +57,12 @@
        <property name="toolTip">
         <string>The current file being Turn Tabled</string>
        </property>
+       <property name="statusTip">
+        <string>The current file being Turn Tabled</string>
+       </property>
+       <property name="whatsThis">
+        <string>The current file being Turn Tabled</string>
+       </property>
        <property name="placeholderText">
         <string>The Current File to be sent to the farm</string>
        </property>
@@ -85,7 +91,13 @@
      <item>
       <widget class="QListWidget" name="hdriList">
        <property name="toolTip">
-        <string>HDRII list provided by a Shotgun directory of Studio HDRIs</string>
+        <string>HDRI list provided by a Shotgun directory of Studio HDRIs</string>
+       </property>
+       <property name="statusTip">
+        <string>HDRI list provided by a Shotgun directory of Studio HDRIs</string>
+       </property>
+       <property name="whatsThis">
+        <string>HDRI list provided by a Shotgun directory of Studio HDRIs</string>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -120,6 +132,12 @@
        <property name="toolTip">
         <string>Custom HDRI file, if a specific file is desired</string>
        </property>
+       <property name="statusTip">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
+       <property name="whatsThis">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
        <property name="placeholderText">
         <string>If a show/shot specific HDRI is needed</string>
        </property>
@@ -128,6 +146,12 @@
      <item>
       <widget class="QPushButton" name="browse_btn">
        <property name="toolTip">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
+       <property name="statusTip">
+        <string>Custom HDRI file, if a specific file is desired</string>
+       </property>
+       <property name="whatsThis">
         <string>Custom HDRI file, if a specific file is desired</string>
        </property>
        <property name="text">
@@ -167,6 +191,12 @@
        <property name="toolTip">
         <string>Starting frame of Camera animation.</string>
        </property>
+       <property name="statusTip">
+        <string>Starting frame of Camera animation.</string>
+       </property>
+       <property name="whatsThis">
+        <string>Starting frame of Camera animation.</string>
+       </property>
        <property name="maximum">
         <number>50000</number>
        </property>
@@ -193,11 +223,17 @@
        <property name="toolTip">
         <string>End frame of the Camera Animation.  HDRI Spin will be added to this time</string>
        </property>
+       <property name="statusTip">
+        <string>End frame of the Camera Animation.  HDRI Spin will be added to this time</string>
+       </property>
+       <property name="whatsThis">
+        <string>End frame of the Camera Animation.  HDRI Spin will be added to this time</string>
+       </property>
        <property name="maximum">
         <number>50000</number>
        </property>
        <property name="value">
-        <number>1120</number>
+        <number>1072</number>
        </property>
       </widget>
      </item>
@@ -225,8 +261,14 @@
        <property name="toolTip">
         <string>Total frames of animation is the Camera Rotation plus an HDRI rotation of the same value.  Thus, double the frames</string>
        </property>
+       <property name="statusTip">
+        <string>Total frames of animation is the Camera Rotation plus an HDRI rotation of the same value.  Thus, double the frames</string>
+       </property>
+       <property name="whatsThis">
+        <string>Total frames of animation is the Camera Rotation plus an HDRI rotation of the same value.  Thus, double the frames</string>
+       </property>
        <property name="text">
-        <string>240</string>
+        <string>144</string>
        </property>
        <property name="readOnly">
         <bool>false</bool>
@@ -255,6 +297,12 @@
        <property name="toolTip">
         <string>Resolution set by Shotgun if available</string>
        </property>
+       <property name="statusTip">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
+       <property name="whatsThis">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
        <property name="text">
         <string>Resolution</string>
        </property>
@@ -272,6 +320,12 @@
         </size>
        </property>
        <property name="toolTip">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
+       <property name="statusTip">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
+       <property name="whatsThis">
         <string>Resolution set by Shotgun if available</string>
        </property>
        <property name="maxLength">
@@ -297,6 +351,12 @@
        <property name="toolTip">
         <string>Resolution set by Shotgun if available</string>
        </property>
+       <property name="statusTip">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
+       <property name="whatsThis">
+        <string>Resolution set by Shotgun if available</string>
+       </property>
        <property name="maxLength">
         <number>8</number>
        </property>
@@ -305,6 +365,12 @@
      <item>
       <widget class="QComboBox" name="res_scale">
        <property name="toolTip">
+        <string>Resolution scale will change the final render size.</string>
+       </property>
+       <property name="statusTip">
+        <string>Resolution scale will change the final render size.</string>
+       </property>
+       <property name="whatsThis">
         <string>Resolution scale will change the final render size.</string>
        </property>
        <property name="currentIndex">
@@ -383,6 +449,12 @@
        <property name="toolTip">
         <string>Pixel aspect set by Shotgun if it's available</string>
        </property>
+       <property name="statusTip">
+        <string>Pixel aspect set by Shotgun if it's available</string>
+       </property>
+       <property name="whatsThis">
+        <string>Pixel aspect set by Shotgun if it's available</string>
+       </property>
        <property name="text">
         <string>1.0</string>
        </property>
@@ -410,6 +482,12 @@
        <property name="toolTip">
         <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
        </property>
+       <property name="statusTip">
+        <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
+       </property>
+       <property name="whatsThis">
+        <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
+       </property>
        <property name="text">
         <string>Rendering Engine</string>
        </property>
@@ -421,6 +499,12 @@
      <item>
       <widget class="QComboBox" name="rendering_engine">
        <property name="toolTip">
+        <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
+       </property>
+       <property name="statusTip">
+        <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
+       </property>
+       <property name="whatsThis">
         <string>The Rendering Engine.  Selected by Shotgun if it is available.</string>
        </property>
        <item>
@@ -463,6 +547,223 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QLabel" name="render_slices_label">
+       <property name="toolTip">
+        <string>The render slices set a percentage of frames to be rendered based on rotational degrees. All frames will be submitted to the farm, but only frames at the chosen angle will automatically be rendered, leaving the remaining frames suspended. 0° renders all frames</string>
+       </property>
+       <property name="statusTip">
+        <string>The render slices set a percentage of frames to be rendered based on rotational degrees. All frames will be submitted to the farm, but only frames at the chosen angle will automatically be rendered, leaving the remaining frames suspended. 0° renders all frames</string>
+       </property>
+       <property name="whatsThis">
+        <string>The render slices set a percentage of frames to be rendered based on rotational degrees. All frames will be submitted to the farm, but only frames at the chosen angle will automatically be rendered, leaving the remaining frames suspended. 0° renders all frames</string>
+       </property>
+       <property name="text">
+        <string>Render Slices</string>
+       </property>
+       <property name="buddy">
+        <cstring>render_slices</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="render_slices">
+       <property name="toolTip">
+        <string>The render slices set a percentage of frames to be rendered based on rotational degrees. All frames will be submitted to the farm, but only frames at the chosen angle will automatically be rendered, leaving the remaining frames suspended. 0° renders all frames</string>
+       </property>
+       <property name="statusTip">
+        <string>The render slices set a percentage of frames to be rendered based on rotational degrees. All frames will be submitted to the farm, but only frames at the chosen angle will automatically be rendered, leaving the remaining frames suspended. 0° renders all frames</string>
+       </property>
+       <property name="whatsThis">
+        <string>The render slices set a percentage of frames to be rendered based on rotational degrees. All frames will be submitted to the farm, but only frames at the chosen angle will automatically be rendered, leaving the remaining frames suspended. 0° renders all frames</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>0°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>15°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>20°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>25°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>30°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>35°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>40°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>45°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>50°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>55°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>60°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>65°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>70°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>75°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>80°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>85°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>90°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>95°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>105°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>110°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>115°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>120°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>125°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>130°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>135°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>140°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>145°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>150°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>155°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>160°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>165°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>170°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>175°</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>180°</string>
+        </property>
+       </item>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -479,6 +780,15 @@
      </item>
      <item>
       <widget class="QSlider" name="quality_slider">
+       <property name="toolTip">
+        <string>The quality setting for the renderer.  </string>
+       </property>
+       <property name="statusTip">
+        <string>The quality setting for the renderer.  </string>
+       </property>
+       <property name="whatsThis">
+        <string>The quality setting for the renderer.  </string>
+       </property>
        <property name="minimum">
         <number>50</number>
        </property>
@@ -498,6 +808,15 @@
      </item>
      <item>
       <widget class="QSpinBox" name="quality_value">
+       <property name="toolTip">
+        <string>The quality setting for the renderer.  </string>
+       </property>
+       <property name="statusTip">
+        <string>The quality setting for the renderer.  </string>
+       </property>
+       <property name="whatsThis">
+        <string>The quality setting for the renderer.  </string>
+       </property>
        <property name="value">
         <number>85</number>
        </property>
@@ -528,6 +847,9 @@
        <property name="toolTip">
         <string>When checked, any lights created in the scene will be rendered as one of the render passes.  Otherwise the existing lights will be ignored.</string>
        </property>
+       <property name="statusTip">
+        <string>When checked, any lights created in the scene will be rendered as one of the render passes.  Otherwise the existing lights will be ignored.</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -544,6 +866,12 @@
        <property name="toolTip">
         <string>Create a shadow catching ground plane</string>
        </property>
+       <property name="statusTip">
+        <string>Create a shadow catching ground plane</string>
+       </property>
+       <property name="whatsThis">
+        <string>Create a shadow catching ground plane</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -557,6 +885,15 @@
      </item>
      <item>
       <widget class="QCheckBox" name="chrome_balls">
+       <property name="toolTip">
+        <string>Automatically generate Chrome and 50% Gray Spheres</string>
+       </property>
+       <property name="statusTip">
+        <string>Automatically generate Chrome and 50% Gray Spheres</string>
+       </property>
+       <property name="whatsThis">
+        <string>Automatically generate Chrome and 50% Gray Spheres</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -625,6 +962,12 @@ QProgressBar::chunk {
      <item>
       <widget class="QPushButton" name="spin_btn">
        <property name="toolTip">
+        <string>Create the Turnable file and submit it.</string>
+       </property>
+       <property name="statusTip">
+        <string>Create the Turnable file and submit it.</string>
+       </property>
+       <property name="whatsThis">
         <string>Create the Turnable file and submit it.</string>
        </property>
        <property name="text">

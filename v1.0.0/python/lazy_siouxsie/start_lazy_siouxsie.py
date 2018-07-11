@@ -82,6 +82,28 @@ class LazySiouxsie(QtGui.QWidget):
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
 
+        filters = [
+            ['id', 'is', self.project_id]
+        ]
+        fields = [
+            'sg_pixel_aspect',
+            'sg_output_resolution',
+            'sg_renderers'
+        ]
+        sg_settings = self.sg.shotgun.find_one('Project', filters, fields)
+
+        sg_resolution = sg_settings['sg_output_resolution']
+        split_res = sg_resolution.split('x')
+        resolution_width = split_res[0]
+        resolution_height = split_res[1]
+        pixel_aspect = str(sg_settings['sg_pixel_aspect'])
+        renderers = sg_settings['sg_renderers'][0]['name']
+
+        self.ui.res_width.setText(resolution_width)
+        self.ui.res_height.setText(resolution_height)
+        self.ui.pixel_aspect.setText(pixel_aspect)
+        self.ui.rendering_engine.setCurrentText(renderers)
+
         hdri_path = self._app.get_setting('hdri_path')
         if os.path.exists(hdri_path):
             self.hdri_path = hdri_path
@@ -126,7 +148,6 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.file(s=True)
             self.ui.build_progress.setValue(7)
             self.ui.status_label.setText('Saving Turntable file...')
-            print next_file
             cmds.file(rn=next_file)
             cmds.file(s=True, type='mayaBinary')
             self.ui.build_progress.setValue(8)
@@ -197,10 +218,12 @@ class LazySiouxsie(QtGui.QWidget):
                 if cmds.about(q=True, v=True) < '2018':
                     ground_plane = cmds.polyPlane(h=radius, w=radius, ax=[0, 1, 0], ch=True, cuv=2,
                                                   n='_turntable_ground_plane', sx=10, sy=20)
+                    self.texture_ground(ground=ground_plane, renderer=rendering_engine)
                 else:
                     cmds.polyDisc(s=4, sm=4, sd=3, r=radius)
                     cmds.rename('_turntable_ground_plane')
                     ground_plane = cmds.ls(sl=True)[0]
+                    self.texture_ground(ground=ground_plane, renderer=rendering_engine)
                 self.ui.build_progress.setValue(32)
                 self.ui.status_label.setText('Set the plane Position...')
                 cmds.select(ground_plane, r=True)
@@ -251,6 +274,14 @@ class LazySiouxsie(QtGui.QWidget):
             sleep(3)
             self.cancel()
 
+    def texture_ground(self, ground=None, renderer=None):
+        if ground:
+            print ground
+            if renderer == 'arnold':
+                material = cmds.shadingNode('aiShadowMatte', asShader=True, n='_turntable_ground_mat')
+                cmds.select(ground, r=True)
+                cmds.hyperShade(a=material)
+
     def texture_chrome_balls(self, spheres=None, renderer=None):
         materials = {}
         if spheres:
@@ -278,10 +309,24 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.specular' % gray_surface, 1)
                 cmds.setAttr('%s.specularRoughness' % gray_surface, 0.65)
 
-                materials['gray_shader'] = gray_surface
-                materials['chrome_shader'] = chrome_surface
             elif renderer == 'vray':
-                pass
+                gray_surface = cmds.shadingNode('VRayMtl', asShader=True, n='_turntable_gray_mat')
+                chrome_surface = cmds.shadingNode('VRayMtl', asShader=True, n='_turntable_chrome_mat')
+                cmds.select(chrome_transform, r=True)
+                cmds.hyperShade(a=chrome_surface)
+                cmds.select(gray_transform, r=True)
+                cmds.hyperShade(a=gray_surface)
+
+                cmds.setAttr('%s.useFresnel' % chrome_surface, 0)
+                cmds.setAttr('%s.reflectionColor' % chrome_surface, 1, 1, 1, type='double3')
+                cmds.setAttr('%s.diffuseColorAmount' % chrome_surface, 0)
+                cmds.setAttr('%s.color' % chrome_surface, 1, 1, 1, type='double3')
+
+                cmds.setAttr('%s.color' % gray_surface, 0.5, 0.5, 0.5, type='double3')
+                cmds.setAttr('%s.reflectionColor' % gray_surface, 0.5, 0.5, 0.5, type='double3')
+                cmds.setAttr('%s.hilightGlossinessLock' % gray_surface, 0)
+                cmds.setAttr('%s.reflectionGlossiness' % gray_surface, 0)
+                cmds.setAttr('%s.hilightGlossiness' % gray_surface, 0.35)
             elif renderer == 'renderman':
                 pass
             elif renderer == 'redshift':
@@ -293,6 +338,9 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.hyperShade(a=chrome_surface)
                 cmds.select(gray_transform, r=True)
                 cmds.hyperShade(a=gray_surface)
+
+            materials['gray_shader'] = gray_surface
+            materials['chrome_shader'] = chrome_surface
 
         return materials
 
@@ -324,16 +372,16 @@ class LazySiouxsie(QtGui.QWidget):
         # "defaultArnoldRenderOptions.AASamples"
         # 6;
 
-
     def build_hdri_dome(self, renderer=None, lights=None, hdri_list=None, center=None):
         hdri = {}
         if renderer == 'arnold':
             self.ui.build_progress.setValue(27)
             self.ui.status_label.setText('Create Arnold SkyDome...')
-            light = cmds.createNode('aiSkyDomeLight', n='HDRI_light')
+            light = cmds.createNode('aiSkyDomeLight')
             self.ui.build_progress.setValue(28)
             self.ui.status_label.setText('Get parent translation...')
             cmds.pickWalk(d='up')
+            cmds.rename('_HDRI_light')
             light_trans = cmds.ls(sl=True)[0]
             self.ui.build_progress.setValue(29)
             self.ui.status_label.setText('Connect Light to file...')
@@ -347,8 +395,22 @@ class LazySiouxsie(QtGui.QWidget):
             hdri['file'] = file_node
             hdri['translation'] = light_trans
         elif renderer == 'vray':
-            # Figure out the vray code...
-            pass
+            self.ui.build_progress.setValue(27)
+            self.ui.status_label.setText('Create VRay Dome Light...')
+            light = cmds.createNode('VRayLightDomeShape')
+            self.ui.build_progress.setValue(28)
+            self.ui.status_label.setText('Get parent translation...')
+            cmds.pickWalk(d='up')
+            cmds.rename('_HDRI_light')
+            light_trans = cmds.ls(sl=True)[0]
+            self.ui.build_progress.setValue(29)
+            self.ui.status_label.setText('Connect Light to file...')
+            cmds.setAttr('%s.useDomeTex' % light, 1)
+            file_node = cmds.createNode('file')
+            cmds.connectAttr('%s.outColor' % file_node, '%s.domeTex' % light, r=True)
+            hdri['dome'] = light
+            hdri['file'] = file_node
+            hdri['translation'] = light_trans
         elif renderer == 'redshift':
             # Figure out RedShift code
             pass
@@ -564,7 +626,13 @@ class LazySiouxsie(QtGui.QWidget):
         x_center = scene_bb[3] - ((scene_bb[3] - scene_bb[0]) / 2)
         y_center = scene_bb[4] - ((scene_bb[4] - scene_bb[1]) / 2)
         z_center = scene_bb[5] - ((scene_bb[5] - scene_bb[2]) / 2)
+        self.ui.build_progress.setValue(14)
+        self.ui.status_label.setText('Animating the Set...')
+        cmds.select('_Turntable_Set_Prep', r=True)
         bb_center = [x_center, y_center, z_center]
+        cmds.xform(piv=[x_center, y_center, z_center])
+        cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-25, ott='linear', t=start)
+        cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-385.0, itt='linear', t=end)
         # calculate a new height for the camera based on the bounding box
         cam_height = scene_bb[4] - scene_bb[1]
         # Create a new camera and fit it to the current view
@@ -591,6 +659,14 @@ class LazySiouxsie(QtGui.QWidget):
         max_hypotenuse = cube_diff ** (1. / 3.)
         # Cut the width in half to create a 90 degree angle
         self.ui.build_progress.setValue(18)
+        res_width = float(self.ui.res_width.text())
+        res_height = float(self.ui.res_height.text())
+        aspect_ratio = res_width / res_height
+        height = (y_max - y_min)
+        width = (x_max - x_min)
+        depth = (z_max - z_min)
+        if height > width and height > depth:
+            max_hypotenuse *= aspect_ratio
         half_width = max_hypotenuse / 2
         # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view must be calculated from that
         horizontalApertureInch = cmds.getAttr('%s.horizontalFilmAperture' % cam[1])
@@ -613,23 +689,20 @@ class LazySiouxsie(QtGui.QWidget):
         cmds.setAttr('%s.ty' % cam[0], cam_height)
         cmds.setAttr('%s.tz' % cam[0], distance)
         # Get the new camera position
-        cam_pos = cmds.xform(q=True, t=True, ws=True)
+        new_cam_pos = cmds.xform(q=True, t=True, ws=True)
         # Calculate the decension angle from the center of the scene to the new camera position
         self.ui.build_progress.setValue(22)
         self.ui.status_label.setText('Adjusting camera angle...')
-        cam_height = cam_pos[1] - bb_center[1]
-        cam_dist = cam_pos[2] - bb_center[2]
-        cam_angle = -1 * (math.degrees(cam_height / cam_dist))
+        cam_height = new_cam_pos[1] - bb_center[1]
+        cam_dist = new_cam_pos[2] - bb_center[2]
+        cam_angle = -1 * (math.degrees(math.atan(cam_height / cam_dist)))
         # Set the declination angle
         cmds.setAttr('%s.rx' % cam[0], cam_angle)
         # Group the camera, center the pivot, and animate the rotation
 
         self.ui.build_progress.setValue(23)
         self.ui.status_label.setText('Animating the camera...')
-        cmds.group(n='turn_table_rotate')
-        cmds.xform(piv=[x_center, y_center, z_center])
-        cmds.setKeyframe('turn_table_rotate.ry', v=25, ott='linear', t=start)
-        cmds.setKeyframe('turn_table_rotate.ry', v=385.0, itt='linear', t=end)
+        cmds.group(n='_turntable_cam')
         return [cam, bb_center, scene_bb, max_hypotenuse]
 
     def animate_dome(self, trans=None, start=None, end=None):
