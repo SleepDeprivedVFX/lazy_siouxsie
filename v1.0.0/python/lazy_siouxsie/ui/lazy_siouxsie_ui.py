@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Tue Jul 10 23:15:24 2018
+# Created: Wed Jul 11 11:17:03 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -131,6 +131,13 @@ class Ui_lazySiouxsie(object):
         self.horizontalLayout_8.addWidget(self.pixel_aspect)
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_8.addItem(spacerItem2)
+        self.camera_height_label = QtGui.QLabel(lazySiouxsie)
+        self.camera_height_label.setObjectName("camera_height_label")
+        self.horizontalLayout_8.addWidget(self.camera_height_label)
+        self.camera_height = QtGui.QLineEdit(lazySiouxsie)
+        self.camera_height.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.camera_height.setObjectName("camera_height")
+        self.horizontalLayout_8.addWidget(self.camera_height)
         self.verticalLayout_2.addLayout(self.horizontalLayout_8)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
@@ -269,6 +276,7 @@ class Ui_lazySiouxsie(object):
         self.totalFrameLabel.setBuddy(self.total_frames)
         self.resolution_label.setBuddy(self.res_width)
         self.pixel_aspect_label.setBuddy(self.pixel_aspect)
+        self.camera_height_label.setBuddy(self.camera_height)
         self.render_engine_label.setBuddy(self.rendering_engine)
         self.render_slices_label.setBuddy(self.render_slices)
         self.quality_label.setBuddy(self.quality_slider)
@@ -348,6 +356,13 @@ class Ui_lazySiouxsie(object):
         self.pixel_aspect.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "Pixel aspect set by Shotgun if it\'s available", None))
         self.pixel_aspect.setWhatsThis(QtGui.QApplication.translate("lazySiouxsie", "Pixel aspect set by Shotgun if it\'s available", None))
         self.pixel_aspect.setText(QtGui.QApplication.translate("lazySiouxsie", "1.0", None))
+        self.camera_height_label.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "Height off the ground in Maya Units.  If left blank, camara uses the default calculation", None))
+        self.camera_height_label.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "Height off the ground in Maya Units.  If left blank, camara uses the default calculation", None))
+        self.camera_height_label.setWhatsThis(QtGui.QApplication.translate("lazySiouxsie", "Height off the ground in Maya Units.  If left blank, camara uses the default calculation", None))
+        self.camera_height_label.setText(QtGui.QApplication.translate("lazySiouxsie", "Camera Height", None))
+        self.camera_height.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "Height off the ground in Maya Units.  If left blank, camara uses the default calculation", None))
+        self.camera_height.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "Height off the ground in Maya Units.  If left blank, camara uses the default calculation", None))
+        self.camera_height.setWhatsThis(QtGui.QApplication.translate("lazySiouxsie", "Height off the ground in Maya Units.  If left blank, camara uses the default calculation", None))
         self.render_engine_label.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "The Rendering Engine.  Selected by Shotgun if it is available.", None))
         self.render_engine_label.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "The Rendering Engine.  Selected by Shotgun if it is available.", None))
         self.render_engine_label.setWhatsThis(QtGui.QApplication.translate("lazySiouxsie", "The Rendering Engine.  Selected by Shotgun if it is available.", None))

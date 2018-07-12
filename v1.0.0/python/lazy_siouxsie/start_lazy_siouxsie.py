@@ -215,15 +215,16 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.build_progress.setValue(31)
                 self.ui.status_label.setText('Building Ground Plane...')
                 radius = 10 * scene_max_width
+                print 'hdri_dome: %s' % hdri_dome
                 if cmds.about(q=True, v=True) < '2018':
                     ground_plane = cmds.polyPlane(h=radius, w=radius, ax=[0, 1, 0], ch=True, cuv=2,
                                                   n='_turntable_ground_plane', sx=10, sy=20)
-                    self.texture_ground(ground=ground_plane, renderer=rendering_engine)
+                    self.texture_ground(ground=ground_plane, renderer=rendering_engine, file_node=hdri_dome['file'])
                 else:
                     cmds.polyDisc(s=4, sm=4, sd=3, r=radius)
                     cmds.rename('_turntable_ground_plane')
                     ground_plane = cmds.ls(sl=True)[0]
-                    self.texture_ground(ground=ground_plane, renderer=rendering_engine)
+                    self.texture_ground(ground=ground_plane, renderer=rendering_engine, file_node=hdri_dome['file'])
                 self.ui.build_progress.setValue(32)
                 self.ui.status_label.setText('Set the plane Position...')
                 cmds.select(ground_plane, r=True)
@@ -252,7 +253,6 @@ class LazySiouxsie(QtGui.QWidget):
                 spheres.append(chrome_ball)
                 spheres.append(gray_ball)
                 materials = self.texture_chrome_balls(spheres=spheres, renderer=rendering_engine)
-                print materials
 
             self.ui.build_progress.setValue(50)
             self.ui.status_label.setText('Begin Layers Setup...')
@@ -274,13 +274,25 @@ class LazySiouxsie(QtGui.QWidget):
             sleep(3)
             self.cancel()
 
-    def texture_ground(self, ground=None, renderer=None):
+    def texture_ground(self, ground=None, renderer=None, file_node=None):
         if ground:
             print ground
             if renderer == 'arnold':
                 material = cmds.shadingNode('aiShadowMatte', asShader=True, n='_turntable_ground_mat')
                 cmds.select(ground, r=True)
                 cmds.hyperShade(a=material)
+            elif renderer == 'vray':
+                material = cmds.shadingNode('VRayMtlWrapper', asShader=True, n='_turntable_ground_mat')
+                vray_base_mat = cmds.shadingNode('VRayMtl', asShader=True, n='_turntable_vray_ground_base')
+                cmds.connectAttr('%s.outColor' % vray_base_mat, '%s.baseMaterial' % material, f=True)
+                cmds.connectAttr('%s.outColor' % file_node, '%s.color' % vray_base_mat, f=True)
+                cmds.select(ground, r=True)
+                cmds.hyperShade(a=material)
+                cmds.setAttr('%s.matteSurface' % material, 1)
+                cmds.setAttr('%s.shadows' % material, 1)
+                cmds.setAttr('%s.affectAlpha' % material, 1)
+                cmds.setAttr('%s.alphaContribution' % material, -1)
+                cmds.connectAttr('%s.outColor' % file_node, 'vraySettings.cam_envtexBg', f=True)
 
     def texture_chrome_balls(self, spheres=None, renderer=None):
         materials = {}
@@ -397,7 +409,7 @@ class LazySiouxsie(QtGui.QWidget):
         elif renderer == 'vray':
             self.ui.build_progress.setValue(27)
             self.ui.status_label.setText('Create VRay Dome Light...')
-            light = cmds.createNode('VRayLightDomeShape')
+            light = cmds.createNode('VRayLightDomeShape', n='_HDRI_lightShape')
             self.ui.build_progress.setValue(28)
             self.ui.status_label.setText('Get parent translation...')
             cmds.pickWalk(d='up')
@@ -407,7 +419,12 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.status_label.setText('Connect Light to file...')
             cmds.setAttr('%s.useDomeTex' % light, 1)
             file_node = cmds.createNode('file')
-            cmds.connectAttr('%s.outColor' % file_node, '%s.domeTex' % light, r=True)
+            cmds.connectAttr('%s.outColor' % file_node, '%s.domeTex' % light, f=True)
+            connections = cmds.listConnections(light)
+            for conn in connections:
+                if cmds.nodeType(conn) == 'VRayPlaceEnvTex':
+                    cmds.setAttr('%s.useTransform' % conn, 1)
+                    break
             hdri['dome'] = light
             hdri['file'] = file_node
             hdri['translation'] = light_trans
@@ -436,6 +453,8 @@ class LazySiouxsie(QtGui.QWidget):
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
                             lights=[], balls=[]):
         rs = renderSetup.instance()
+        default_render_layer = rs.getDefaultRenderLayer()
+        default_render_layer.setRenderable(False)
         # lights = list(lights)
 
         if lights:
@@ -478,7 +497,8 @@ class LazySiouxsie(QtGui.QWidget):
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
-        # rs.switchToLayer('defaultRenderLayer')
+        rs.switchToLayer(None)
+
 
     def get_scene_lights(self, renderer=None):
         lights = []
@@ -634,7 +654,12 @@ class LazySiouxsie(QtGui.QWidget):
         cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-25, ott='linear', t=start)
         cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-385.0, itt='linear', t=end)
         # calculate a new height for the camera based on the bounding box
-        cam_height = scene_bb[4] - scene_bb[1]
+        user_cam_height = self.ui.camera_height.text()
+        if user_cam_height != '':
+            cam_height = float(user_cam_height) + scene_bb[1]
+        else:
+            cam_height = scene_bb[4] - scene_bb[1]
+        print cam_height
         # Create a new camera and fit it to the current view
         self.ui.build_progress.setValue(14)
         self.ui.status_label.setText('Creating camera...')

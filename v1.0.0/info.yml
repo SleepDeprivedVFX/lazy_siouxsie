@@ -13,18 +13,6 @@
 # expected fields in the configuration file for this engine
 configuration:
     # hook for when a file opens
-#    hook_open_operation:
-#        type: hook
-#        parameters: []
-#        default_value: "{self}/open_operation.py"
-#        allows_empty: True
-#        description: Setup automatic turn tables
-
-#    ts_debug_logging:
-#        type: bool
-#        default_value: False
-#        description: Turns on and off debug logging.
-#        allows_empty: True
     hdri_path:
         type: str
         default_value: "C:/Users/sleep/OneDrive/Documents/resources/hdri"
@@ -35,6 +23,12 @@ configuration:
         type: str
         default_value: turntable.main
         description: Set the task that is used in Shotgun
+        allows_empty: False
+
+    output_format:
+        type: str
+        default_value: PNG
+        description: The render format for the turntables
         allows_empty: False
 
 # this app works in all engines - it does not contain 

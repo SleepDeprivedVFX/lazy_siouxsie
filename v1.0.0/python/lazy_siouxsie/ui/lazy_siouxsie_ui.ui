@@ -473,6 +473,44 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QLabel" name="camera_height_label">
+       <property name="toolTip">
+        <string>Height off the ground in Maya Units.  If left blank, camara uses the default calculation</string>
+       </property>
+       <property name="statusTip">
+        <string>Height off the ground in Maya Units.  If left blank, camara uses the default calculation</string>
+       </property>
+       <property name="whatsThis">
+        <string>Height off the ground in Maya Units.  If left blank, camara uses the default calculation</string>
+       </property>
+       <property name="text">
+        <string>Camera Height</string>
+       </property>
+       <property name="buddy">
+        <cstring>camera_height</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="camera_height">
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Height off the ground in Maya Units.  If left blank, camara uses the default calculation</string>
+       </property>
+       <property name="statusTip">
+        <string>Height off the ground in Maya Units.  If left blank, camara uses the default calculation</string>
+       </property>
+       <property name="whatsThis">
+        <string>Height off the ground in Maya Units.  If left blank, camara uses the default calculation</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
