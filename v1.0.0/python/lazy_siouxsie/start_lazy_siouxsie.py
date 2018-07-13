@@ -72,6 +72,7 @@ class LazySiouxsie(QtGui.QWidget):
         self._app = sgtk.platform.current_bundle()
 
         self.turntable_task = self._app.get_setting('turntable_task')
+        self.render_format = self._app.get_setting('output_format')
 
         engine = self._app.engine
         self.sg = engine.sgtk
@@ -260,6 +261,8 @@ class LazySiouxsie(QtGui.QWidget):
                                      hdri_list=selected_hdri, lights=get_scene_lights, balls=spheres)
 
             # Setup the rendering setup
+            self.setup_rendering_engine(renderer=rendering_engine, render_format=self.render_format,
+                                        task=self.turntable_task, filename=next_file, cam=camera)
             # Send to the farm.
 
             self.ui.build_progress.setValue(97)
@@ -293,6 +296,204 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.affectAlpha' % material, 1)
                 cmds.setAttr('%s.alphaContribution' % material, -1)
                 cmds.connectAttr('%s.outColor' % file_node, 'vraySettings.cam_envtexBg', f=True)
+
+    def setup_rendering_engine(self, renderer=None, render_format=None, task=None, filename=None, cam=None):
+        split_path = filename.rsplit('.', 1)[0]
+        version = split_path.rsplit('_', 1)[1]
+        pixel_aspect = self.ui.pixel_aspect.text()
+        resolutionWidth = int(self.ui.res_width.text())
+        resolutionHeight = int(self.ui.res_height.text())
+        resolution_scale = self.ui.res_scale.currentText()
+        start_frame = float(self.ui.startFrame.text())
+        end_frame = float(self.ui.endFrame.text())
+        quality = self.ui.quality_value.value()
+        resolution_scale = float(resolution_scale.strip('%'))
+        resolution_scale /= 100
+        resolutionHeight *= resolution_scale
+        resolutionWidth *= resolution_scale
+        vrayImageFormats = {
+            'png': 'png',
+            'jpg': 'jpg',
+            'vrimg': 'vrimg',
+            'hdr': 'hdr',
+            'exr(singlepass)': 'exr',
+            'exr': 'exr (multichannel)',
+            'tga': 'tga',
+            'bmp': 'bmp',
+            'sgi': 'sgi',
+            'tif': 'tif',
+            'vrsm': 'vrsm',
+            'vrst': 'vrst',
+            'exr(deep)': 'exr(deep)'
+        }
+        # Arnold Image Format Command: cmds.setAttr( 'defaultArnoldDriver.ai_translator', 'exr', type='string' )
+        # Arnold Image Format Options List:
+        arnoldImageFormats = {
+            'png': 'png',
+            'jpg': 'jpeg',
+            'tif': 'tif',
+            'mtoa_shaders': 'mtoa_shaders',
+            'exr(deep)': 'deepexr',
+            'exr': 'exr',
+            'mplay': 'mplay',
+            'maya': 'maya'
+        }
+        # Maya Default Render Command: setAttr "defaultRenderGlobals.imageFormat" 23;
+        # Maya Default Format Options List:
+        defaultImageFormats = {
+            'als': 6,
+            'avi': 23,
+            'cin': 11,
+            'dds': 35,
+            'eps': 9,
+            'gif': 0,
+            'jpg': 8,
+            'iff': 7,
+            'iff16': 10,
+            'psd': 31,
+            'psd(layered)': 36,
+            'png': 32,
+            'yuv': 12,
+            'mov': 22,
+            'rla': 2,
+            'sgi': 5,
+            'sgi16': 13,
+            'pic': 1,
+            'tga': 19,
+            'tif': 3,
+            'tif16': 4,
+            'bmp': 20,
+            'tim': 63,
+            'xpm': 63
+        }
+        renderEngines = [
+            'vray',
+            'mentalray',
+            'redshift',
+            'renderman',
+            'arnold',
+            'mayaSoftware',
+            'mayaHardware'
+        ]
+        fpsTypes = {
+            'hour': ['hour'],
+            'min': ['min'],
+            'sec': ['sec'],
+            'millisec': ['millisec'],
+            'game': ['game'],
+            'film': ['24', '24fps', '24 fps', '24.00', '24.0'],
+            'pal': ['25', '25fps', 'pal', '25 fps', '25.00', '25.0'],
+            'ntsc': ['30', 'ntsc', '30fps', '30 fps', '30.00', '30.0'],
+            'show': ['48', '48fps', '48 fps', 'show', '48.00', '48.0'],
+            'palf': ['50', '50fps', '50 fps', 'palf', '50.00', '50.0'],
+            'ntscf': ['60', '60fps', '60 fps', 'ntscf', '60.00', '60.0'],
+            '23.976fps': ['23.976fps', '23.976', '23.98', '23.98fps', '23.98 fps', '23.976 fps'],
+            '29.97fps': ['29.97fps', '29.97 fps', '29.97'],
+            '29.97df': ['29.97df', '29.97 df', 'drop-frame'],
+            '47.952fps': ['47.952fps', '47.952 fps', '47.952', '47.95fps', '47.95 fps', '47.95'],
+            '59.94fps': ['59.94fps', '59.94 fps', '59.94'],
+            '44100fps': ['44100fps', '44100 fps', '44100'],
+            '48000fps': ['48000fps', '48000 fps', '48000']
+        }
+        render_string = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+
+        if renderer == 'vray':
+            cmds.setAttr('vraySettings.aspectLock', 0)
+            cmds.setAttr('vraySettings.animType', 1)
+            cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+            cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+            if not cmds.pluginInfo('vrayformaya', q=True, l=True):
+                try:
+                    cmds.loadPlugin('vrayformaya')
+                except:
+                    print 'CANNOT LOAD V-RAY'
+            # ------------------------------------------------------
+            # Attempt to set rendering engine
+            # ------------------------------------------------------
+            try:
+                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+                # defaultRenderGlobals.ren loaded twice, because vray doesn't always load the plugin on the first load.
+                print '%s Renderer is loaded!' % renderer
+            except Exception, e:
+                print 'failed'
+            # ------------------------------------------------------
+            # Attempt to set Render Path
+            # ------------------------------------------------------
+            try:
+                pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
+                cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
+            except Exception, e:
+                print 'failed'
+            # ------------------------------------------------------
+            # Attempt to set Resolution
+            # ------------------------------------------------------
+            try:
+                cmds.setAttr('vraySettings.width', int(resolutionWidth))
+                cmds.setAttr('vraySettings.height', int(resolutionHeight))
+                cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
+            except Exception, e:
+                print 'RESOLUTION FAILED!'
+                print resolutionWidth
+                print resolutionHeight
+                print pixel_aspect
+            try:
+                output = render_format.lower()
+                cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
+            except Exception, e:
+                print 'IMAGE FORMAT FAILED'
+                print render_format, output
+                print vrayImageFormats[output]
+        elif renderer == 'arnold':
+            if not cmds.pluginInfo('mtoa', q=True, l=True):
+                try:
+                    cmds.loadPlugin('mtoa')
+                except:
+                    print 'CANNOT LOAD ARNOLD!'
+            try:
+                pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
+                cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
+                cmds.setAttr('defaultRenderGlobals.animation', 1)
+                cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
+                cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
+                cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+                cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+            except:
+                pass
+            try:
+                cmds.setAttr('defaultResolution.width', resolutionWidth)
+                cmds.setAttr('defaultResolution.height', resolutionHeight)
+            except:
+                pass
+            try:
+                output = render_format.lower()
+                cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
+            except:
+                pass
+        else:
+            try:
+                pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
+                cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
+                cmds.setAttr('defaultRenderGlobals.animation', 1)
+                cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
+                cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
+                cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+                cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+            except:
+                pass
+            try:
+                cmds.setAttr('defaultResolution.width', resolutionWidth)
+                cmds.setAttr('defaultResolution.height', resolutionHeight)
+            except:
+                pass
+            try:
+                output = render_format.lower()
+                cmds.setAttr('defaultRenderGlobals.imageFormat', arnoldImageFormats[output])
+            except:
+                pass
 
     def texture_chrome_balls(self, spheres=None, renderer=None):
         materials = {}
@@ -499,7 +700,6 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
         rs.switchToLayer(None)
 
-
     def get_scene_lights(self, renderer=None):
         lights = []
         if renderer == 'arnold':
@@ -693,7 +893,8 @@ class LazySiouxsie(QtGui.QWidget):
         if height > width and height > depth:
             max_hypotenuse *= aspect_ratio
         half_width = max_hypotenuse / 2
-        # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view must be calculated from that
+        # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view
+        # must be calculated from that
         horizontalApertureInch = cmds.getAttr('%s.horizontalFilmAperture' % cam[1])
         # convert to mm
         horizontalAperture_mm = 2.54 * horizontalApertureInch * 10
@@ -728,6 +929,12 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.build_progress.setValue(23)
         self.ui.status_label.setText('Animating the camera...')
         cmds.group(n='_turntable_cam')
+        cameras = cmds.listCameras(p=True, o=True)
+        for camera in cameras:
+            if camera == cam[0]:
+                cmds.setAttr('%s.renderable' % camera, 1)
+            else:
+                cmds.setAttr('%s.renderable' % camera, 0)
         return [cam, bb_center, scene_bb, max_hypotenuse]
 
     def animate_dome(self, trans=None, start=None, end=None):
