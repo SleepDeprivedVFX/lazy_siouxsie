@@ -362,12 +362,22 @@ class LazySiouxsie(QtGui.QWidget):
             output = render_format.lower()
             cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
 
-            print quality
             dmc_maxSubDivs = int(2.4 * quality)
             dmc_threshold = 0.1 / quality
-            adaptive_amount = (float(quality)/10) - 0.05
+            # Adaptive Amount base on the following equation with constants figured out from domain and range variables
+            # d = Adaptive Amplitude
+            # r = Adaptive Slope
+            # f(x) = d * arctan(r * x) - 1.05
+            adaptive_amplitude = 1.35950130973274
+            adaptive_slope = 0.99
+            adaptive_amount = adaptive_amplitude * math.atan(adaptive_slope * float(quality)) - 1.05
+            # Adaptive Threshold based on the following equation with constants figured out from domain/range variables
+            # d = Threshold Amplitude
+            # f(x) = -d * arctan(x) + 0.195
+            threshold_amplitude = 0.12915262442461
+            adaptive_threshold = ((-1 * threshold_amplitude) * math.atan(float(quality))) + 0.195
+            print quality
             print adaptive_amount
-            adaptive_threshold = (-.012 * math.atan(0.008 * math.pow(float(quality), 3)))
             print adaptive_threshold
             cmds.setAttr('vraySettings.samplerType', 4)
             cmds.setAttr('vraySettings.minShadeRate', quality)
@@ -414,10 +424,13 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setAttr('defaultResolution.height', resolutionHeight)
 
             output = render_format.lower()
-            cmds.setAttr('defaultRenderGlobals.imageFormat', arnoldImageFormats[output])
+            # cmds.setAttr('defaultRenderGlobals.imageFormat', arnoldImageFormats[output])
+            cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
 
             quality_mult = 0.4
             secondary_samples = int(math.ceil(quality * quality_mult))
+            print quality
+            print secondary_samples
             cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
             cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
             cmds.setAttr('defaultArnoldRenderOptions.GISpecularSamples', secondary_samples)
