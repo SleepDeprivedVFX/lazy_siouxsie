@@ -338,64 +338,6 @@ class LazySiouxsie(QtGui.QWidget):
             'mplay': 'mplay',
             'maya': 'maya'
         }
-        # Maya Default Render Command: setAttr "defaultRenderGlobals.imageFormat" 23;
-        # Maya Default Format Options List:
-        defaultImageFormats = {
-            'als': 6,
-            'avi': 23,
-            'cin': 11,
-            'dds': 35,
-            'eps': 9,
-            'gif': 0,
-            'jpg': 8,
-            'iff': 7,
-            'iff16': 10,
-            'psd': 31,
-            'psd(layered)': 36,
-            'png': 32,
-            'yuv': 12,
-            'mov': 22,
-            'rla': 2,
-            'sgi': 5,
-            'sgi16': 13,
-            'pic': 1,
-            'tga': 19,
-            'tif': 3,
-            'tif16': 4,
-            'bmp': 20,
-            'tim': 63,
-            'xpm': 63
-        }
-        renderEngines = [
-            'vray',
-            'mentalray',
-            'redshift',
-            'renderman',
-            'arnold',
-            'mayaSoftware',
-            'mayaHardware'
-        ]
-        fpsTypes = {
-            'hour': ['hour'],
-            'min': ['min'],
-            'sec': ['sec'],
-            'millisec': ['millisec'],
-            'game': ['game'],
-            'film': ['24', '24fps', '24 fps', '24.00', '24.0'],
-            'pal': ['25', '25fps', 'pal', '25 fps', '25.00', '25.0'],
-            'ntsc': ['30', 'ntsc', '30fps', '30 fps', '30.00', '30.0'],
-            'show': ['48', '48fps', '48 fps', 'show', '48.00', '48.0'],
-            'palf': ['50', '50fps', '50 fps', 'palf', '50.00', '50.0'],
-            'ntscf': ['60', '60fps', '60 fps', 'ntscf', '60.00', '60.0'],
-            '23.976fps': ['23.976fps', '23.976', '23.98', '23.98fps', '23.98 fps', '23.976 fps'],
-            '29.97fps': ['29.97fps', '29.97 fps', '29.97'],
-            '29.97df': ['29.97df', '29.97 df', 'drop-frame'],
-            '47.952fps': ['47.952fps', '47.952 fps', '47.952', '47.95fps', '47.95 fps', '47.95'],
-            '59.94fps': ['59.94fps', '59.94 fps', '59.94'],
-            '44100fps': ['44100fps', '44100 fps', '44100'],
-            '48000fps': ['48000fps', '48000 fps', '48000']
-        }
-        render_string = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
 
         if renderer == 'vray':
             cmds.setAttr('vraySettings.aspectLock', 0)
@@ -407,93 +349,81 @@ class LazySiouxsie(QtGui.QWidget):
                     cmds.loadPlugin('vrayformaya')
                 except:
                     print 'CANNOT LOAD V-RAY'
-            # ------------------------------------------------------
-            # Attempt to set rendering engine
-            # ------------------------------------------------------
-            try:
-                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
-                # defaultRenderGlobals.ren loaded twice, because vray doesn't always load the plugin on the first load.
-                print '%s Renderer is loaded!' % renderer
-            except Exception, e:
-                print 'failed'
-            # ------------------------------------------------------
-            # Attempt to set Render Path
-            # ------------------------------------------------------
-            try:
-                pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
-                cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
-            except Exception, e:
-                print 'failed'
-            # ------------------------------------------------------
-            # Attempt to set Resolution
-            # ------------------------------------------------------
-            try:
-                cmds.setAttr('vraySettings.width', int(resolutionWidth))
-                cmds.setAttr('vraySettings.height', int(resolutionHeight))
-                cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
-            except Exception, e:
-                print 'RESOLUTION FAILED!'
-                print resolutionWidth
-                print resolutionHeight
-                print pixel_aspect
-            try:
-                output = render_format.lower()
-                cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
-            except Exception, e:
-                print 'IMAGE FORMAT FAILED'
-                print render_format, output
-                print vrayImageFormats[output]
+
+            cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+
+            pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
+            cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
+
+            cmds.setAttr('vraySettings.width', int(resolutionWidth))
+            cmds.setAttr('vraySettings.height', int(resolutionHeight))
+            cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
+
+            output = render_format.lower()
+            cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
+
+            print quality
+            dmc_maxSubDivs = int(2.4 * quality)
+            dmc_threshold = 0.1 / quality
+            adaptive_amount = (float(quality)/10) - 0.05
+            print adaptive_amount
+            adaptive_threshold = (-.012 * math.atan(0.008 * math.pow(float(quality), 3)))
+            print adaptive_threshold
+            cmds.setAttr('vraySettings.samplerType', 4)
+            cmds.setAttr('vraySettings.minShadeRate', quality)
+            cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
+            cmds.setAttr('vraySettings.dmcMaxSubdivs', dmc_maxSubDivs)
+            cmds.setAttr('vraySettings.dmcThreshold', dmc_threshold)
+            cmds.setAttr('vraySettings.dmcs_adaptiveAmount', adaptive_amount)
+            cmds.setAttr('vraySettings.dmcs_adaptiveThreshold', adaptive_threshold)
+            cmds.setAttr('vraySettings.giOn', 1)
+
         elif renderer == 'arnold':
             if not cmds.pluginInfo('mtoa', q=True, l=True):
                 try:
                     cmds.loadPlugin('mtoa')
                 except:
                     print 'CANNOT LOAD ARNOLD!'
-            try:
-                pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
-                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
-                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
-                cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
-                cmds.setAttr('defaultRenderGlobals.animation', 1)
-                cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
-                cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
-                cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
-                cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
-            except:
-                pass
-            try:
-                cmds.setAttr('defaultResolution.width', resolutionWidth)
-                cmds.setAttr('defaultResolution.height', resolutionHeight)
-            except:
-                pass
-            try:
-                output = render_format.lower()
-                cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
-            except:
-                pass
-        else:
-            try:
-                pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
-                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
-                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
-                cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
-                cmds.setAttr('defaultRenderGlobals.animation', 1)
-                cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
-                cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
-                cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
-                cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
-            except:
-                pass
-            try:
-                cmds.setAttr('defaultResolution.width', resolutionWidth)
-                cmds.setAttr('defaultResolution.height', resolutionHeight)
-            except:
-                pass
-            try:
-                output = render_format.lower()
-                cmds.setAttr('defaultRenderGlobals.imageFormat', arnoldImageFormats[output])
-            except:
-                pass
+            pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+            cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
+            cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
+            cmds.setAttr('defaultRenderGlobals.animation', 1)
+            cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
+            cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
+            cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+            cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+
+            cmds.setAttr('defaultResolution.width', resolutionWidth)
+            cmds.setAttr('defaultResolution.height', resolutionHeight)
+
+            output = render_format.lower()
+            cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
+
+            pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+            cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
+            cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
+            cmds.setAttr('defaultRenderGlobals.animation', 1)
+            cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
+            cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
+            cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+            cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+
+            cmds.setAttr('defaultResolution.width', resolutionWidth)
+            cmds.setAttr('defaultResolution.height', resolutionHeight)
+
+            output = render_format.lower()
+            cmds.setAttr('defaultRenderGlobals.imageFormat', arnoldImageFormats[output])
+
+            quality_mult = 0.4
+            secondary_samples = int(math.ceil(quality * quality_mult))
+            cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
+            cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
+            cmds.setAttr('defaultArnoldRenderOptions.GISpecularSamples', secondary_samples)
+            cmds.setAttr('defaultArnoldRenderOptions.GITransmissionSamples', secondary_samples)
+            cmds.setAttr('defaultArnoldRenderOptions.GISssSamples', secondary_samples)
+            cmds.setAttr('defaultArnoldRenderOptions.GIVolumeSamples', (secondary_samples - 1))
 
     def texture_chrome_balls(self, spheres=None, renderer=None):
         materials = {}

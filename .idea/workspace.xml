@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="45ddcecf-08c9-40b3-8eb8-41eef5babcfb" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/info.yml" afterPath="$PROJECT_DIR$/v1.0.0/info.yml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py" afterPath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py" afterPath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.ui" afterPath="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.ui" />
@@ -26,8 +25,8 @@
           <file leaf-file-name="lazy_siouxsie_ui.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
-                  <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                <state relative-caret-position="7350">
+                  <caret line="294" column="4" lean-forward="false" selection-start-line="294" selection-start-column="4" selection-end-line="294" selection-end-column="4" />
                   <folding />
                 </state>
               </provider>
@@ -46,15 +45,11 @@
           <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="314">
-                  <caret line="258" column="69" lean-forward="false" selection-start-line="258" selection-start-column="69" selection-end-line="258" selection-end-column="69" />
+                <state relative-caret-position="1285">
+                  <caret line="369" column="89" lean-forward="false" selection-start-line="369" selection-start-column="89" selection-end-line="369" selection-end-column="89" />
                   <folding>
                     <element signature="e#678#689#0" expanded="true" />
-                    <element signature="e#5241#5253#0" expanded="false" />
-                    <element signature="e#22929#23946#0" expanded="false" />
-                    <element signature="e#23978#24125#0" expanded="false" />
-                    <element signature="e#24168#24876#0" expanded="false" />
-                    <element signature="e#24921#28354#0" expanded="false" />
+                    <element signature="e#5309#5321#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -89,15 +84,11 @@
           <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="25">
-                  <caret line="252" column="40" lean-forward="false" selection-start-line="252" selection-start-column="40" selection-end-line="252" selection-end-column="40" />
+                <state relative-caret-position="1872">
+                  <caret line="253" column="40" lean-forward="false" selection-start-line="253" selection-start-column="40" selection-end-line="253" selection-end-column="40" />
                   <folding>
                     <element signature="e#678#689#0" expanded="true" />
-                    <element signature="e#5241#5253#0" expanded="false" />
-                    <element signature="e#22929#23946#0" expanded="false" />
-                    <element signature="e#23978#24125#0" expanded="false" />
-                    <element signature="e#24168#24876#0" expanded="false" />
-                    <element signature="e#24921#28354#0" expanded="false" />
+                    <element signature="e#5309#5321#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -148,13 +139,15 @@
       <find>renderer</find>
       <find>1001</find>
       <find>240144144</find>
-      <find>, QtGui.QApplication.UnicodeUTF8</find>
       <find>instance(</find>
+      <find>taskName</find>
+      <find>, QtGui.QApplication.UnicodeUTF8</find>
     </findStrings>
     <replaceStrings>
       <replace>/</replace>
       <replace>setValue(</replace>
       <replace>_Turntable_Set_Prep</replace>
+      <replace>task</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -169,9 +162,9 @@
         <option value="$PROJECT_DIR$/python/__init__.py" />
         <option value="$PROJECT_DIR$/python/lazy_siouxsie/__init__.py" />
         <option value="$PROJECT_DIR$/v1.0.0/app.py" />
+        <option value="$PROJECT_DIR$/v1.0.0/info.yml" />
         <option value="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py" />
         <option value="$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py" />
-        <option value="$PROJECT_DIR$/v1.0.0/info.yml" />
       </list>
     </option>
   </component>
@@ -197,7 +190,6 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -253,6 +245,32 @@
               <option name="myItemId" value="lazy_siouxsie" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="start_lazy_siouxsie.py" />
+              <option name="myItemType" value="com.jetbrains.python.projectView.PyFileNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tk-lazy_siouxsie" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tk-lazy_siouxsie" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="v1.0.0" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="python" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lazy_siouxsie" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -282,10 +300,11 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../mastertemplate_asc" />
   </component>
   <component name="RunManager" selected="Python.auto_turntable">
     <configuration default="false" name="auto_turntable" type="PythonConfigurationType" factoryName="Python" temporary="true">
@@ -609,7 +628,21 @@
       <option name="project" value="LOCAL" />
       <updated>1531295650761</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Added a camera height feature for allowing more directed camera angles.  Added VRay setups for ground plane and spheres.  Have it selecting the defaultRenderLayer and turning it off for rendering.  Need to add the actual render setup and then write the bits for the farm.  Also added another configuration for setting the render format.">
+      <created>1531362335847</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1531362335847</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Got most of the render settings working for vray and arnold.  Moving on to quality settings">
+      <created>1531460015644</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1531460015644</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -659,7 +692,9 @@
     <MESSAGE value="I have the Arnold Materials setup working, but still have to do the render settings" />
     <MESSAGE value="Added some render settings for the spheres, but now I'm about to attempt to fix the camera distance problem that showed up in Thing 3" />
     <MESSAGE value="Added render slices to the UI.  Connected the settings to shotgun.  Updated the Tool tips" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added render slices to the UI.  Connected the settings to shotgun.  Updated the Tool tips" />
+    <MESSAGE value="Added a camera height feature for allowing more directed camera angles.  Added VRay setups for ground plane and spheres.  Have it selecting the defaultRenderLayer and turning it off for rendering.  Need to add the actual render setup and then write the bits for the farm.  Also added another configuration for setting the render format." />
+    <MESSAGE value="Got most of the render settings working for vray and arnold.  Moving on to quality settings" />
+    <option name="LAST_COMMIT_MESSAGE" value="Got most of the render settings working for vray and arnold.  Moving on to quality settings" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -674,11 +709,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#5241#5253#0" expanded="false" />
-            <element signature="e#22929#23946#0" expanded="false" />
-            <element signature="e#23978#24125#0" expanded="false" />
-            <element signature="e#24168#24876#0" expanded="false" />
-            <element signature="e#24921#28354#0" expanded="false" />
+            <element signature="e#5309#5321#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -723,11 +754,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#5241#5253#0" expanded="false" />
-            <element signature="e#22929#23946#0" expanded="false" />
-            <element signature="e#23978#24125#0" expanded="false" />
-            <element signature="e#24168#24876#0" expanded="false" />
-            <element signature="e#24921#28354#0" expanded="false" />
+            <element signature="e#5309#5321#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -754,11 +781,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#5241#5253#0" expanded="false" />
-            <element signature="e#22929#23946#0" expanded="false" />
-            <element signature="e#23978#24125#0" expanded="false" />
-            <element signature="e#24168#24876#0" expanded="false" />
-            <element signature="e#24921#28354#0" expanded="false" />
+            <element signature="e#5309#5321#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -811,11 +834,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#5241#5253#0" expanded="false" />
-            <element signature="e#22929#23946#0" expanded="false" />
-            <element signature="e#23978#24125#0" expanded="false" />
-            <element signature="e#24168#24876#0" expanded="false" />
-            <element signature="e#24921#28354#0" expanded="false" />
+            <element signature="e#5309#5321#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -842,11 +861,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#5241#5253#0" expanded="false" />
-            <element signature="e#22929#23946#0" expanded="false" />
-            <element signature="e#23978#24125#0" expanded="false" />
-            <element signature="e#24168#24876#0" expanded="false" />
-            <element signature="e#24921#28354#0" expanded="false" />
+            <element signature="e#5309#5321#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -927,14 +942,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Autodesk/Maya2018/Python/Lib/site-packages/maya/app/renderSetup/model/renderSetup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6425">
@@ -959,17 +966,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7350">
+          <caret line="294" column="4" lean-forward="false" selection-start-line="294" selection-start-column="4" selection-end-line="294" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="314">
-          <caret line="258" column="69" lean-forward="false" selection-start-line="258" selection-start-column="69" selection-end-line="258" selection-end-column="69" />
+        <state relative-caret-position="1285">
+          <caret line="369" column="89" lean-forward="false" selection-start-line="369" selection-start-column="89" selection-end-line="369" selection-end-column="89" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#5241#5253#0" expanded="false" />
-            <element signature="e#22929#23946#0" expanded="false" />
-            <element signature="e#23978#24125#0" expanded="false" />
-            <element signature="e#24168#24876#0" expanded="false" />
-            <element signature="e#24921#28354#0" expanded="false" />
+            <element signature="e#5309#5321#0" expanded="false" />
           </folding>
         </state>
       </provider>

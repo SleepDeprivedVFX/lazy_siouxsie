@@ -828,13 +828,13 @@
         <string>The quality setting for the renderer.  </string>
        </property>
        <property name="minimum">
-        <number>50</number>
+        <number>1</number>
        </property>
        <property name="maximum">
-        <number>100</number>
+        <number>10</number>
        </property>
        <property name="value">
-        <number>85</number>
+        <number>7</number>
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -855,8 +855,14 @@
        <property name="whatsThis">
         <string>The quality setting for the renderer.  </string>
        </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>10</number>
+       </property>
        <property name="value">
-        <number>85</number>
+        <number>7</number>
        </property>
       </widget>
      </item>
@@ -864,19 +870,6 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_9">
-     <item>
-      <spacer name="horizontalSpacer_6">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item>
       <widget class="QCheckBox" name="scene_lights">
        <property name="enabled">
@@ -900,6 +893,19 @@
       </widget>
      </item>
      <item>
+      <spacer name="horizontalSpacer_7">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QCheckBox" name="ground_plane">
        <property name="toolTip">
         <string>Create a shadow catching ground plane</string>
@@ -920,6 +926,19 @@
         <bool>true</bool>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_8">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <widget class="QCheckBox" name="chrome_balls">
