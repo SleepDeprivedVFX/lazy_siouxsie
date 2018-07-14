@@ -216,7 +216,6 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.build_progress.setValue(31)
                 self.ui.status_label.setText('Building Ground Plane...')
                 radius = 10 * scene_max_width
-                print 'hdri_dome: %s' % hdri_dome
                 if cmds.about(q=True, v=True) < '2018':
                     ground_plane = cmds.polyPlane(h=radius, w=radius, ax=[0, 1, 0], ch=True, cuv=2,
                                                   n='_turntable_ground_plane', sx=10, sy=20)
@@ -232,6 +231,9 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.tx' % ground_plane, center[0])
                 cmds.setAttr('%s.ty' % ground_plane, y_min)
                 cmds.setAttr('%s.tz' % ground_plane, center[2])
+                cmds.addAttr(ground_plane, ln='original_file', dt='string')
+                original_file = os.path.basename(self.ui.file_path.text())
+                cmds.setAttr('%s.original_file' % ground_plane, original_file, type='string')
 
             get_spheres = self.ui.chrome_balls.isChecked()
             spheres = []
@@ -240,6 +242,11 @@ class LazySiouxsie(QtGui.QWidget):
                 sphere_radius = ((y_max - y_min)/2) * 0.25
                 chrome_ball = cmds.polySphere(r=sphere_radius, n='_turntable_chrome_ball')
                 gray_ball = cmds.polySphere(r=sphere_radius, n='_turntable_gray_ball')
+                cmds.addAttr(chrome_ball, ln='original_file', dt='string')
+                original_file = os.path.basename(self.ui.file_path.text())
+                cmds.setAttr('%s.original_file' % chrome_ball, original_file, type='string')
+                cmds.addAttr(gray_ball, ln='original_file', dt='string')
+                cmds.setAttr('%s.original_file' % gray_ball, original_file, type='string')
 
                 # positioning of the chrome balls
                 chrome_x_point = center[0] + ((base_max_width / 2) * .85)
@@ -279,7 +286,6 @@ class LazySiouxsie(QtGui.QWidget):
 
     def texture_ground(self, ground=None, renderer=None, file_node=None):
         if ground:
-            print ground
             if renderer == 'arnold':
                 material = cmds.shadingNode('aiShadowMatte', asShader=True, n='_turntable_ground_mat')
                 cmds.select(ground, r=True)
@@ -376,9 +382,6 @@ class LazySiouxsie(QtGui.QWidget):
             # f(x) = -d * arctan(x) + 0.195
             threshold_amplitude = 0.12915262442461
             adaptive_threshold = ((-1 * threshold_amplitude) * math.atan(float(quality))) + 0.195
-            print quality
-            print adaptive_amount
-            print adaptive_threshold
             cmds.setAttr('vraySettings.samplerType', 4)
             cmds.setAttr('vraySettings.minShadeRate', quality)
             cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
@@ -429,8 +432,6 @@ class LazySiouxsie(QtGui.QWidget):
 
             quality_mult = 0.4
             secondary_samples = int(math.ceil(quality * quality_mult))
-            print quality
-            print secondary_samples
             cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
             cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
             cmds.setAttr('defaultArnoldRenderOptions.GISpecularSamples', secondary_samples)
@@ -582,6 +583,9 @@ class LazySiouxsie(QtGui.QWidget):
             pass
         cmds.select(light_trans, r=True)
         cmds.xform(t=center, ws=True)
+        cmds.addAttr(light_trans, ln='original_file', dt='string')
+        original_file = os.path.basename(self.ui.file_path.text())
+        cmds.setAttr('%s.original_file' % light_trans, original_file, type='string')
         return hdri
 
     def get_hdri_files(self):
@@ -802,7 +806,6 @@ class LazySiouxsie(QtGui.QWidget):
             cam_height = float(user_cam_height) + scene_bb[1]
         else:
             cam_height = scene_bb[4] - scene_bb[1]
-        print cam_height
         # Create a new camera and fit it to the current view
         self.ui.build_progress.setValue(14)
         self.ui.status_label.setText('Creating camera...')
