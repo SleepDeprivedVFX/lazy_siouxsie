@@ -18,9 +18,9 @@ GOALS:
 """
 
 import sgtk
+import platform
 import os
 import sys
-import threading
 import maya.app.renderSetup.model.override as override
 import maya.app.renderSetup.model.selector as selector
 import maya.app.renderSetup.model.collection as collection
@@ -32,6 +32,7 @@ import glob
 import re
 from time import sleep
 import math
+from datetime import datetime
 
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
@@ -70,6 +71,20 @@ class LazySiouxsie(QtGui.QWidget):
         # most of the useful accessors are available through the Application class instance
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
+
+        # Connect to Deadline
+        os_sys = platform.system()
+        self.computer = platform.node()
+        if os_sys == 'Windows':
+            # This should go into the paths.yml perhaps.  Setup a series of universal paths, and then call them here.
+            python_path = 'C:\\Python27\\Lib\\site-packages'
+        else:
+            python_path = '/Volumes/Applications/Python27/Lib/site-packages'
+        sys.path.append(python_path)
+        from Deadline import DeadlineConnect as connect
+        deadline_connection = self._app.get_setting('deadline_connection')
+        deadline_port = int(self._app.get_setting('deadline_port'))
+        self.dl = connect.DeadlineCon(deadline_connection, deadline_port)
 
         self.turntable_task = self._app.get_setting('turntable_task')
         self.render_format = self._app.get_setting('output_format')
@@ -285,6 +300,7 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(80)
             self.ui.status_label.setText('Creating Deadline Job...')
+            self.submit_to_deadlin(start=start, end=extended_end, renderer=rendering_engine, camera=camera)
 
             # Finalizing
             self.ui.build_progress.setValue(90)
@@ -897,4 +913,134 @@ class LazySiouxsie(QtGui.QWidget):
         if trans:
             cmds.setKeyframe('%s.ry' % trans, v=25, ott='linear', t=start)
             cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
+
+    def submit_to_deadlin(self, start=1, end=144, renderer=None, width=None, height=None, camera=None):
+        '''
+        I'll need a command line string with all the settings.  It will then be placed into something like this:
+        batch_string = str('mayabatch -file %s -command "%s"' % (self.file_path, str(command_string)))
+        I'll need to use list_deadline_pools to find the VRay or Arnold pool and
+        That will then be packed into a couple of Deadline documents, a JobInfo file and a PluginInfoFile that
+        will then be sent using something like this:
+        submitted = self.dl.Jobs.SubmitJobFiles(jobInfo, PluginInfo, idOnly=True)
+        That should be it.
+
+        Example Plugin
+
+        UseLegacyRenderLayers=0
+        Build=64bit
+        ProjectPath=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700
+        CommandLineOptions=
+        ImageWidth=1075
+        ImageHeight=858
+        OutputFilePath=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700/publish/renders/
+        OutputFilePrefix=<Camera>/BE_4700_lookdev.main_v037
+        Camera=BE_4700_shotCam1:shotCam1
+        Camera0=
+        Camera1=BE_4700_shotCam1:shotCam1
+        Camera2=BE_4700_shotCam2:shotCam1
+        Camera3=front
+        Camera4=persp2
+        Camera5=persp
+        Camera6=persp1
+        Camera7=side
+        Camera8=top
+        IgnoreError211=1
+        :return:
+        '''
+        all_pools = self.list_deadline_pools()
+
+        job_info = ''
+        plugin_info = ''
+        dependent_id = None
+        base_name = os.path.basename(self.ui.file_path).rsplit('.', 1)[0]
+        job_path = os.environ['TEMP'] + '\\_job_submissions'
+        if not os.path.exists(job_path):
+            os.mkdir(job_path)
+        h = datetime.now().hour
+        m = datetime.now().minute
+        s = datetime.now().second
+        h = '%02d' % h
+        m = '%02d' % m
+        s = '%02d' % s
+        D = datetime.now().day
+        D = '%02d' % D
+        M = datetime.now().month
+        M = '%02d' % M
+        Y = datetime.now().year
+        d = '%s-%s-%s' % (D, M, Y)
+        d_flat = str(d).replace('-', '')
+        ji_filename = '%s_%s%s%s%s_%s_jobInfo.job' % (base_name, d_flat, h, m, s, type)
+        ji_filepath = job_path + '\\' + ji_filename
+        pi_filename = '%s_%s%s%s%s_%s_pluginInfo.job' % (base_name, d_flat, h, m, s, type)
+        pi_filepath = job_path + '\\' + pi_filename
+        job_info_file = open(ji_filepath, 'w+')
+        plugin_info_file = open(pi_filepath, 'w+')
+
+        # Setup JobInfo
+        user_name = os.environ['USERNAME']
+        frames = '%s-%s' % (start, end)
+        pool = None
+        for p in all_pools:
+            if renderer in p:
+                pool = p
+                break
+
+        resolutionWidth = int(self.ui.res_width.text())
+        resolutionHeight = int(self.ui.res_height.text())
+        resolution_scale = self.ui.res_scale.currentText()
+        resolution_scale = float(resolution_scale.strip('%'))
+        resolution_scale /= 100
+        resolutionHeight *= resolution_scale
+        resolutionWidth *= resolution_scale
+
+        job_info += 'Name=%s\n' % base_name
+        job_info += 'UserName=%s\n' % user_name
+        job_info += 'Region=none\n'
+        job_info += 'Comment=Lazy Siouxsie Automatic Turntable\n'
+        job_info += 'Frames=%s\n' % frames
+        job_info += 'Pool=%s\n' % pool
+        job_info += 'Priority=65\n'
+        job_info += 'Blacklist=\n'
+        job_info += 'MachineLimit=5\n'
+        job_info += 'ScheduledStartDateTime=%s/%s/%s %s:%s\n' % (D, M, Y, h, m)
+        job_info += 'OverrideTaskExtraInfoNames=False\n'
+        job_info += 'MachineName=%s\n' % platform.node()
+        job_info += 'Plugin=MayaCmd\n'
+        job_info += 'OutputDirectory0=\n'  # Needs Data
+        job_info += 'OutputFilename0=\n'  #  Needs Data
+        job_info += 'EventOptIns='
+
+        # Setup PluginInfo
+        plugin_info += 'Animation=1\n'
+        plugin_info += 'Renderer=%s\n' % renderer
+        plugin_info += 'UsingRenderLayers=1\n'
+        plugin_info += 'RenderLayer=\n'
+        plugin_info += 'RenderHalfFrames=0\n'
+        plugin_info += 'FrameNumberOffset=0\n'
+        plugin_info += 'LocalRendering=0\n'
+        plugin_info += 'StrictErrorChecking=0\n'
+        plugin_info += 'MaxProcessors=0\n'
+        plugin_info += 'Version=%s\n' % cmds.about(q=True, v=True)
+        plugin_info += 'UsingLegacyRenderLayers=0\n'
+        if cmds.about(q=True, w64=True):
+            win = '64bit'
+        else:
+            win = '32bit'
+        plugin_info += 'Build=%s\n' % win
+        plugin_info += 'ProjectPath=%s\n'  # Needs Data
+        plugin_info += 'CommandLineOptions=\n'
+        plugin_info += 'ImageWidth=%s\n' % resolutionWidth
+        plugin_info += 'ImageHeight=%s\n' % resolutionHeight
+        plugin_info += 'OutputFilePath=%s\n'  # Needs Data
+        plugin_info += 'OutputFilePrefix=%s\n'  # Needs Data
+        plugin_info += 'Camera=%s\n' % camera
+        plugin_info += 'IgnoreError211=1'
+
+    def list_deadline_pools(self):
+        try:
+            # pools = ['none', 'maya_vray', 'nuke', 'maya_redshift', 'houdini', 'alembics', 'arnold', 'caching']
+            pools = self.dl.Pools.GetPoolNames()
+        except Exception:
+            pools = []
+        return pools
 
