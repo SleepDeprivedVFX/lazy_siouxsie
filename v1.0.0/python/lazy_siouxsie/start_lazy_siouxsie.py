@@ -266,9 +266,9 @@ class LazySiouxsie(QtGui.QWidget):
                 gray_ball = cmds.polySphere(r=sphere_radius, n='_turntable_gray_ball')
                 cmds.addAttr(chrome_ball, ln='original_file', dt='string')
                 original_file = os.path.basename(self.ui.file_path.text())
-                cmds.setAttr('%s.original_file' % chrome_ball, original_file, type='string')
+                cmds.setAttr('%s.original_file' % chrome_ball[0], original_file, type='string')
                 cmds.addAttr(gray_ball, ln='original_file', dt='string')
-                cmds.setAttr('%s.original_file' % gray_ball, original_file, type='string')
+                cmds.setAttr('%s.original_file' % gray_ball[0], original_file, type='string')
 
                 self.ui.build_progress.setValue(60)
                 self.ui.status_label.setText('Positioning Spheres...')
@@ -952,7 +952,8 @@ class LazySiouxsie(QtGui.QWidget):
         job_info = ''
         plugin_info = ''
         dependent_id = None
-        base_name = os.path.basename(self.ui.file_path).rsplit('.', 1)[0]
+        base_name = os.path.basename(self.ui.file_path.text()).rsplit('.', 1)[0]
+        print base_name
         job_path = os.environ['TEMP'] + '\\_job_submissions'
         if not os.path.exists(job_path):
             os.mkdir(job_path)
@@ -969,9 +970,9 @@ class LazySiouxsie(QtGui.QWidget):
         Y = datetime.now().year
         d = '%s-%s-%s' % (D, M, Y)
         d_flat = str(d).replace('-', '')
-        ji_filename = '%s_%s%s%s%s_%s_jobInfo.job' % (base_name, d_flat, h, m, s, type)
+        ji_filename = '%s_%s%s%s%s_jobInfo.job' % (base_name, d_flat, h, m, s)
         ji_filepath = job_path + '\\' + ji_filename
-        pi_filename = '%s_%s%s%s%s_%s_pluginInfo.job' % (base_name, d_flat, h, m, s, type)
+        pi_filename = '%s_%s%s%s%s_pluginInfo.job' % (base_name, d_flat, h, m, s)
         pi_filepath = job_path + '\\' + pi_filename
         job_info_file = open(ji_filepath, 'w+')
         plugin_info_file = open(pi_filepath, 'w+')
@@ -1009,6 +1010,8 @@ class LazySiouxsie(QtGui.QWidget):
         job_info += 'OutputDirectory0=\n'  # Needs Data
         job_info += 'OutputFilename0=\n'  #  Needs Data
         job_info += 'EventOptIns='
+        job_info_file.write(job_info)
+        job_info_file.close()
 
         # Setup PluginInfo
         plugin_info += 'Animation=1\n'
@@ -1035,6 +1038,8 @@ class LazySiouxsie(QtGui.QWidget):
         plugin_info += 'OutputFilePrefix=%s\n'  # Needs Data
         plugin_info += 'Camera=%s\n' % camera
         plugin_info += 'IgnoreError211=1'
+        plugin_info_file.write(plugin_info)
+        plugin_info_file.close()
 
     def list_deadline_pools(self):
         try:
