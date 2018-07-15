@@ -144,10 +144,10 @@ class LazySiouxsie(QtGui.QWidget):
         # List tasks
         next_file = self.find_turntable_task()
         if next_file:
-            self.ui.build_progress.setValue(5)
+            self.ui.build_progress.setValue(1)
             self.ui.status_label.setText('Saving working file...')
             cmds.file(s=True)
-            self.ui.build_progress.setValue(7)
+            self.ui.build_progress.setValue(5)
             self.ui.status_label.setText('Saving Turntable file...')
             cmds.file(rn=next_file)
             cmds.file(s=True, type='mayaBinary')
@@ -171,32 +171,33 @@ class LazySiouxsie(QtGui.QWidget):
             y_max = bb[4]
             z_max = bb[5]
 
-            self.ui.build_progress.setValue(24)
+            self.ui.build_progress.setValue(34)
             self.ui.status_label.setText('Set frame ranges...')
             total_frames = int(self.ui.total_frames.text())
             add_frames = total_frames/2
             extended_end = end + add_frames
             cmds.playbackOptions(min=start, max=extended_end)
             # Get the rendering engine
-            self.ui.build_progress.setValue(25)
+            self.ui.build_progress.setValue(35)
             self.ui.status_label.setText('Get the rendering engine...')
             rendering_engine = self.ui.rendering_engine.currentText()
             lights = self.ui.scene_lights.isChecked()
 
             # This will need some major renumbering
-            self.ui.build_progress.setValue(33)
+            self.ui.build_progress.setValue(36)
             self.ui.status_label.setText('Get scene lighting requirements...')
             use_scene_lighting = self.ui.scene_lights.isChecked()
             if use_scene_lighting:
-                self.ui.build_progress.setValue(35)
+                self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Get Scene Lights...')
                 get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
             else:
-                self.ui.build_progress.setValue(35)
+                self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Ignoring scene lights...')
-                get_scene_lights = None
+                # Once this is rewritten, this should = None
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
 
-            self.ui.build_progress.setValue(26)
+            self.ui.build_progress.setValue(40)
             self.ui.status_label.setText('Build HDRI dome...')
             hdri_dome = self.build_hdri_dome(renderer=rendering_engine, lights=lights, hdri_list=selected_hdri,
                                              center=center)
@@ -204,16 +205,16 @@ class LazySiouxsie(QtGui.QWidget):
             file_node = hdri_dome['file']
             light_trans = hdri_dome['translation']
 
-            self.ui.build_progress.setValue(30)
+            self.ui.build_progress.setValue(50)
             self.ui.status_label.setText('Animating the HDRI dome...')
             self.animate_dome(trans=light_trans, start=end, end=extended_end)
 
-            self.ui.build_progress.setValue(31)
+            self.ui.build_progress.setValue(51)
             self.ui.status_label.setText('Check groundplane setting...')
             ground = self.ui.ground_plane.isChecked()
             ground_plane = None
             if ground:
-                self.ui.build_progress.setValue(31)
+                self.ui.build_progress.setValue(52)
                 self.ui.status_label.setText('Building Ground Plane...')
                 radius = 10 * scene_max_width
                 if cmds.about(q=True, v=True) < '2018':
@@ -225,7 +226,7 @@ class LazySiouxsie(QtGui.QWidget):
                     cmds.rename('_turntable_ground_plane')
                     ground_plane = cmds.ls(sl=True)[0]
                     self.texture_ground(ground=ground_plane, renderer=rendering_engine, file_node=hdri_dome['file'])
-                self.ui.build_progress.setValue(32)
+                self.ui.build_progress.setValue(54)
                 self.ui.status_label.setText('Set the plane Position...')
                 cmds.select(ground_plane, r=True)
                 cmds.setAttr('%s.tx' % ground_plane, center[0])
@@ -235,11 +236,17 @@ class LazySiouxsie(QtGui.QWidget):
                 original_file = os.path.basename(self.ui.file_path.text())
                 cmds.setAttr('%s.original_file' % ground_plane, original_file, type='string')
 
+            self.ui.build_progress.setValue(55)
+            self.ui.status_label.setText('Checking for Chrome Sphere creation...')
             get_spheres = self.ui.chrome_balls.isChecked()
             spheres = []
             if get_spheres:
+                self.ui.build_progress.setValue(56)
+                self.ui.status_label.setText('Finding Radius...')
                 base_max_width = math.sqrt((math.pow((x_max - x_min), 2)) + (math.pow((y_max - y_min), 2)))
                 sphere_radius = ((y_max - y_min)/2) * 0.25
+                self.ui.build_progress.setValue(58)
+                self.ui.status_label.setText('Making sphers...')
                 chrome_ball = cmds.polySphere(r=sphere_radius, n='_turntable_chrome_ball')
                 gray_ball = cmds.polySphere(r=sphere_radius, n='_turntable_gray_ball')
                 cmds.addAttr(chrome_ball, ln='original_file', dt='string')
@@ -248,6 +255,8 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.addAttr(gray_ball, ln='original_file', dt='string')
                 cmds.setAttr('%s.original_file' % gray_ball, original_file, type='string')
 
+                self.ui.build_progress.setValue(60)
+                self.ui.status_label.setText('Positioning Spheres...')
                 # positioning of the chrome balls
                 chrome_x_point = center[0] + ((base_max_width / 2) * .85)
                 gray_x_point = chrome_x_point + (sphere_radius * 2.2)
@@ -262,20 +271,26 @@ class LazySiouxsie(QtGui.QWidget):
                 spheres.append(gray_ball)
                 materials = self.texture_chrome_balls(spheres=spheres, renderer=rendering_engine)
 
-            self.ui.build_progress.setValue(50)
+            self.ui.build_progress.setValue(62)
             self.ui.status_label.setText('Begin Layers Setup...')
             self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane, light_trans=light_trans,
                                      hdri_list=selected_hdri, lights=get_scene_lights, balls=spheres)
 
+            self.ui.build_progress.setValue(68)
+            self.ui.status_label.setText('Setting render settings...')
             # Setup the rendering setup
             self.setup_rendering_engine(renderer=rendering_engine, render_format=self.render_format,
                                         task=self.turntable_task, filename=next_file, cam=camera)
             # Send to the farm.
 
-            self.ui.build_progress.setValue(97)
+            self.ui.build_progress.setValue(80)
+            self.ui.status_label.setText('Creating Deadline Job...')
+
+            # Finalizing
+            self.ui.build_progress.setValue(90)
             self.ui.status_label.setText('Saving Turntable file...')
             cmds.file(s=True)
-            self.ui.build_progress.setValue(98)
+            self.ui.build_progress.setValue(95)
             self.ui.status_label.setText('Reopening the main file...')
             file_to_return = self.ui.file_path.text()
             cmds.file(file_to_return, o=True)
@@ -286,6 +301,8 @@ class LazySiouxsie(QtGui.QWidget):
 
     def texture_ground(self, ground=None, renderer=None, file_node=None):
         if ground:
+            self.ui.build_progress.setValue(53)
+            self.ui.status_label.setText('Textureing the ground...')
             if renderer == 'arnold':
                 material = cmds.shadingNode('aiShadowMatte', asShader=True, n='_turntable_ground_mat')
                 cmds.select(ground, r=True)
@@ -304,6 +321,8 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.connectAttr('%s.outColor' % file_node, 'vraySettings.cam_envtexBg', f=True)
 
     def setup_rendering_engine(self, renderer=None, render_format=None, task=None, filename=None, cam=None):
+        self.ui.build_progress.setValue(69)
+        self.ui.status_label.setText('Getting UI and scene render settings...')
         split_path = filename.rsplit('.', 1)[0]
         version = split_path.rsplit('_', 1)[1]
         pixel_aspect = self.ui.pixel_aspect.text()
@@ -346,21 +365,31 @@ class LazySiouxsie(QtGui.QWidget):
         }
 
         if renderer == 'vray':
+            self.ui.build_progress.setValue(70)
+            self.ui.status_label.setText('Creating VRay settings...')
             cmds.setAttr('vraySettings.aspectLock', 0)
             cmds.setAttr('vraySettings.animType', 1)
             cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
             cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+            self.ui.build_progress.setValue(72)
+            self.ui.status_label.setText('Checking plugins...')
             if not cmds.pluginInfo('vrayformaya', q=True, l=True):
                 try:
                     cmds.loadPlugin('vrayformaya')
                 except:
                     print 'CANNOT LOAD V-RAY'
 
+            self.ui.build_progress.setValue(74)
+            self.ui.status_label.setText('Setting engine...')
             cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
 
+            self.ui.build_progress.setValue(76)
+            self.ui.status_label.setText('Creating render string...')
             pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
             cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
 
+            self.ui.build_progress.setValue(77)
+            self.ui.status_label.setText('Setting up frame sizes and image format...')
             cmds.setAttr('vraySettings.width', int(resolutionWidth))
             cmds.setAttr('vraySettings.height', int(resolutionHeight))
             cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
@@ -368,6 +397,8 @@ class LazySiouxsie(QtGui.QWidget):
             output = render_format.lower()
             cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
 
+            self.ui.build_progress.setValue(78)
+            self.ui.status_label.setText('Calculating quality settings...')
             dmc_maxSubDivs = int(2.4 * quality)
             dmc_threshold = 0.1 / quality
             # Adaptive Amount base on the following equation with constants figured out from domain and range variables
@@ -382,6 +413,9 @@ class LazySiouxsie(QtGui.QWidget):
             # f(x) = -d * arctan(x) + 0.195
             threshold_amplitude = 0.12915262442461
             adaptive_threshold = ((-1 * threshold_amplitude) * math.atan(float(quality))) + 0.195
+
+            self.ui.build_progress.setValue(79)
+            self.ui.status_label.setText('Setting render quality...')
             cmds.setAttr('vraySettings.samplerType', 4)
             cmds.setAttr('vraySettings.minShadeRate', quality)
             cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
@@ -392,13 +426,20 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setAttr('vraySettings.giOn', 1)
 
         elif renderer == 'arnold':
+            self.ui.build_progress.setValue(70)
+            self.ui.status_label.setText('Checking plugins...')
             if not cmds.pluginInfo('mtoa', q=True, l=True):
                 try:
                     cmds.loadPlugin('mtoa')
                 except:
                     print 'CANNOT LOAD ARNOLD!'
+            self.ui.build_progress.setValue(72)
+            self.ui.status_label.setText('Setting engine and output path...')
             pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+
             cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+            self.ui.build_progress.setValue(74)
+            self.ui.status_label.setText('Setting up frame range and output settings...')
             cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
             cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
             cmds.setAttr('defaultRenderGlobals.animation', 1)
@@ -407,31 +448,20 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
             cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
 
+            self.ui.build_progress.setValue(76)
+            self.ui.status_label.setText('Setting resolution and file format...')
             cmds.setAttr('defaultResolution.width', resolutionWidth)
             cmds.setAttr('defaultResolution.height', resolutionHeight)
 
             output = render_format.lower()
             cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
 
-            pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
-            cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
-            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
-            cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
-            cmds.setAttr('defaultRenderGlobals.animation', 1)
-            cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
-            cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
-            cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
-            cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
-
-            cmds.setAttr('defaultResolution.width', resolutionWidth)
-            cmds.setAttr('defaultResolution.height', resolutionHeight)
-
-            output = render_format.lower()
-            # cmds.setAttr('defaultRenderGlobals.imageFormat', arnoldImageFormats[output])
-            cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
-
+            self.ui.build_progress.setValue(77)
+            self.ui.status_label.setText('Calculating quality settings...')
             quality_mult = 0.4
             secondary_samples = int(math.ceil(quality * quality_mult))
+            self.ui.build_progress.setValue(78)
+            self.ui.status_label.setText('Setting rendering quality...')
             cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
             cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
             cmds.setAttr('defaultArnoldRenderOptions.GISpecularSamples', secondary_samples)
@@ -501,66 +531,35 @@ class LazySiouxsie(QtGui.QWidget):
 
         return materials
 
-        # setAttr
-        # "_turntable_gray_mat.specularRoughness"
-        # 0.3;
-        # setAttr
-        # "_turntable_gray_mat.specularRoughness"
-        # 0.65;
-        # setAttr
-        # "defaultArnoldRenderOptions.GIDiffuseSamples"
-        # 6;
-        # setAttr
-        # "defaultArnoldRenderOptions.GISpecularSamples"
-        # 4;
-        # setAttr
-        # "defaultArnoldRenderOptions.GITransmissionSamples"
-        # 4;
-        # setAttr
-        # "defaultArnoldRenderOptions.GISssSamples"
-        # 4;
-        # setAttr
-        # "defaultArnoldRenderOptions.GIVolumeSamples"
-        # 4;
-        # setAttr
-        # "defaultArnoldRenderOptions.AASamples"
-        # 12;
-        # setAttr
-        # "defaultArnoldRenderOptions.AASamples"
-        # 6;
-
     def build_hdri_dome(self, renderer=None, lights=None, hdri_list=None, center=None):
         hdri = {}
         if renderer == 'arnold':
-            self.ui.build_progress.setValue(27)
+            self.ui.build_progress.setValue(41)
             self.ui.status_label.setText('Create Arnold SkyDome...')
             light = cmds.createNode('aiSkyDomeLight')
-            self.ui.build_progress.setValue(28)
+            self.ui.build_progress.setValue(42)
             self.ui.status_label.setText('Get parent translation...')
             cmds.pickWalk(d='up')
             cmds.rename('_HDRI_light')
             light_trans = cmds.ls(sl=True)[0]
-            self.ui.build_progress.setValue(29)
+            self.ui.build_progress.setValue(44)
             self.ui.status_label.setText('Connect Light to file...')
             cmds.connectAttr('%s.instObjGroups' % light_trans, 'defaultLightSet.dagSetMembers', na=True)
             file_node = cmds.createNode('file')
-            # The following will need to be setup by the list of HDRIs, BUT I need to get the file/light name returned.
-            # cmds.setAttr('%s.fileTextureName' % file_node,
-            #              r'\\elephant\SleepDeprived\Assets\Images\HDRI\CGSkies_0094_free.hdr', type='string')
             cmds.connectAttr('%s.outColor' % file_node, '%s.color' % light, f=True)
             hdri['dome'] = light
             hdri['file'] = file_node
             hdri['translation'] = light_trans
         elif renderer == 'vray':
-            self.ui.build_progress.setValue(27)
+            self.ui.build_progress.setValue(46)
             self.ui.status_label.setText('Create VRay Dome Light...')
             light = cmds.createNode('VRayLightDomeShape', n='_HDRI_lightShape')
-            self.ui.build_progress.setValue(28)
+            self.ui.build_progress.setValue(47)
             self.ui.status_label.setText('Get parent translation...')
             cmds.pickWalk(d='up')
             cmds.rename('_HDRI_light')
             light_trans = cmds.ls(sl=True)[0]
-            self.ui.build_progress.setValue(29)
+            self.ui.build_progress.setValue(48)
             self.ui.status_label.setText('Connect Light to file...')
             cmds.setAttr('%s.useDomeTex' % light, 1)
             file_node = cmds.createNode('file')
@@ -591,6 +590,8 @@ class LazySiouxsie(QtGui.QWidget):
     def get_hdri_files(self):
         hdri_files = []
         files_list = self.ui.hdriList.selectedItems()
+        self.ui.build_progress.setValue(9)
+        self.ui.status_label.setText('Collecting HDRIs...')
         if files_list:
             for hdri in files_list:
                 hdri_files.append(self.hdri_path + '/' + hdri.text())
@@ -600,6 +601,9 @@ class LazySiouxsie(QtGui.QWidget):
 
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
                             lights=[], balls=[]):
+
+        self.ui.build_progress.setValue(63)
+        self.ui.status_label.setText('Setting up render layers...')
         rs = renderSetup.instance()
         default_render_layer = rs.getDefaultRenderLayer()
         default_render_layer.setRenderable(False)
@@ -630,11 +634,17 @@ class LazySiouxsie(QtGui.QWidget):
             # cmds.setAttr('visibility.attrValue', 1)
             # cmds.select(light, r=True)
 
+        self.ui.build_progress.setValue(64)
+        self.ui.status_label.setText('Collecting Turntable Geo...')
         chrome_balls = ''
         if balls:
+            self.ui.build_progress.setValue(65)
+            self.ui.status_label.setText('Adding spheres...')
             for ball in balls:
                 chrome_balls = '%s, %s' % (chrome_balls, ball[0])
         if hdri_list:
+            self.ui.build_progress.setValue(66)
+            self.ui.status_label.setText('Creating render layers...')
             for hdri in hdri_list:
                 # Get the basic filename for the render layer name
                 basename = os.path.basename(hdri)
@@ -650,7 +660,7 @@ class LazySiouxsie(QtGui.QWidget):
     def get_scene_lights(self, renderer=None):
         lights = []
         if renderer == 'arnold':
-            self.ui.build_progress.setValue(36)
+            self.ui.build_progress.setValue(38)
             self.ui.status_label.setText('Getting Arnold Lights...')
             light_types = ['aiAreaLight', 'aiSkyDomeLight', 'aiMeshLight', 'aiPhotometricLight', 'aiLightPortal',
                            'aiPhysicalSky']
@@ -773,7 +783,7 @@ class LazySiouxsie(QtGui.QWidget):
 
     def build_camera(self, start=1, end=120):
         # Select and group the set
-        self.ui.build_progress.setValue(11)
+        self.ui.build_progress.setValue(12)
         self.ui.status_label.setText('Selecting scene geometry...')
         geo = cmds.ls(type=['mesh', 'nurbsSurface'])
         cmds.select(geo, r=True)
@@ -781,19 +791,19 @@ class LazySiouxsie(QtGui.QWidget):
         while z < 100:
             cmds.pickWalk(d='up')
             z += 1
-        self.ui.build_progress.setValue(12)
+        self.ui.build_progress.setValue(14)
         self.ui.status_label.setText('Grouping the geometry...')
         cmds.group(n='_Turntable_Set_Prep')
         # Get the set/scene size from the bounding box
         cmds.select('_Turntable_Set_Prep')
-        self.ui.build_progress.setValue(13)
+        self.ui.build_progress.setValue(16)
         self.ui.status_label.setText('Getting scene center point...')
         scene_bb = cmds.xform(q=True, bb=True)
         # Find the center from the bounding box
         x_center = scene_bb[3] - ((scene_bb[3] - scene_bb[0]) / 2)
         y_center = scene_bb[4] - ((scene_bb[4] - scene_bb[1]) / 2)
         z_center = scene_bb[5] - ((scene_bb[5] - scene_bb[2]) / 2)
-        self.ui.build_progress.setValue(14)
+        self.ui.build_progress.setValue(18)
         self.ui.status_label.setText('Animating the Set...')
         cmds.select('_Turntable_Set_Prep', r=True)
         bb_center = [x_center, y_center, z_center]
@@ -807,17 +817,17 @@ class LazySiouxsie(QtGui.QWidget):
         else:
             cam_height = scene_bb[4] - scene_bb[1]
         # Create a new camera and fit it to the current view
-        self.ui.build_progress.setValue(14)
+        self.ui.build_progress.setValue(20)
         self.ui.status_label.setText('Creating camera...')
         cam = cmds.camera(n='turn_table_cam')
         cmds.lookThru(cam)
         cmds.viewFit()
-        self.ui.build_progress.setValue(15)
+        self.ui.build_progress.setValue(21)
         self.ui.status_label.setText('Beginning camera position calculations...')
         # Get the position of the new camera after placement
         cam_pos = cmds.xform(q=True, ws=True, t=True)
         # Separate out the mins and maxs of the bounding box for triangulation
-        self.ui.build_progress.setValue(16)
+        self.ui.build_progress.setValue(22)
         x_min = scene_bb[0]
         x_max = scene_bb[3]
         y_min = scene_bb[1]
@@ -825,11 +835,11 @@ class LazySiouxsie(QtGui.QWidget):
         z_min = scene_bb[2]
         z_max = scene_bb[5]
         # Get the cube root hypotenuse of the bounding box to calculate the overall scene's widest distance
-        self.ui.build_progress.setValue(17)
+        self.ui.build_progress.setValue(24)
         cube_diff = math.pow((x_max - x_min), 3) + math.pow((y_max - y_min), 3) + math.pow((z_max - z_min), 3)
         max_hypotenuse = cube_diff ** (1. / 3.)
         # Cut the width in half to create a 90 degree angle
-        self.ui.build_progress.setValue(18)
+        self.ui.build_progress.setValue(26)
         res_width = float(self.ui.res_width.text())
         res_height = float(self.ui.res_height.text())
         aspect_ratio = res_width / res_height
@@ -847,23 +857,23 @@ class LazySiouxsie(QtGui.QWidget):
         # Get focal length
         focalLength = cmds.getAttr('%s.focalLength' % cam[1])
         # Calculate FOV from horizontal aperture and focal length
-        self.ui.build_progress.setValue(19)
+        self.ui.build_progress.setValue(27)
         fov = math.degrees(2 * math.atan(horizontalAperture_mm / (focalLength * 2)))
         # Cut the FOV in half to get angle of right angle.
         half_angle = fov / 2
         # Calculate the distance for the camera
-        self.ui.build_progress.setValue(20)
+        self.ui.build_progress.setValue(28)
         angle_tan = math.tan(half_angle)
         distance = cam_pos[2] - (half_width / angle_tan)
         # Set the new camera distance and height
-        self.ui.build_progress.setValue(21)
+        self.ui.build_progress.setValue(29)
         self.ui.status_label.setText('Adjusting camera position...')
         cmds.setAttr('%s.ty' % cam[0], cam_height)
         cmds.setAttr('%s.tz' % cam[0], distance)
         # Get the new camera position
         new_cam_pos = cmds.xform(q=True, t=True, ws=True)
         # Calculate the decension angle from the center of the scene to the new camera position
-        self.ui.build_progress.setValue(22)
+        self.ui.build_progress.setValue(30)
         self.ui.status_label.setText('Adjusting camera angle...')
         cam_height = new_cam_pos[1] - bb_center[1]
         cam_dist = new_cam_pos[2] - bb_center[2]
@@ -872,7 +882,7 @@ class LazySiouxsie(QtGui.QWidget):
         cmds.setAttr('%s.rx' % cam[0], cam_angle)
         # Group the camera, center the pivot, and animate the rotation
 
-        self.ui.build_progress.setValue(23)
+        self.ui.build_progress.setValue(32)
         self.ui.status_label.setText('Animating the camera...')
         cmds.group(n='_turntable_cam')
         cameras = cmds.listCameras(p=True, o=True)
