@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Sun Jul 15 23:41:57 2018
+# Created: Mon Jul 16 01:20:22 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from sgtk.platform.qt import QtCore, QtGui
 class Ui_lazySiouxsie(object):
     def setupUi(self, lazySiouxsie):
         lazySiouxsie.setObjectName("lazySiouxsie")
-        lazySiouxsie.resize(557, 708)
+        lazySiouxsie.resize(557, 680)
         self.verticalLayout_2 = QtGui.QVBoxLayout(lazySiouxsie)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.title = QtGui.QLabel(lazySiouxsie)
@@ -202,6 +202,20 @@ class Ui_lazySiouxsie(object):
         self.degreeLabel.setObjectName("degreeLabel")
         self.horizontalLayout_7.addWidget(self.degreeLabel)
         self.verticalLayout_2.addLayout(self.horizontalLayout_7)
+        self.horizontalLayout_11 = QtGui.QHBoxLayout()
+        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
+        self.label = QtGui.QLabel(lazySiouxsie)
+        self.label.setObjectName("label")
+        self.horizontalLayout_11.addWidget(self.label)
+        self.render_format = QtGui.QComboBox(lazySiouxsie)
+        self.render_format.setObjectName("render_format")
+        self.render_format.addItem("")
+        self.render_format.addItem("")
+        self.render_format.addItem("")
+        self.horizontalLayout_11.addWidget(self.render_format)
+        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_11.addItem(spacerItem4)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
         self.horizontalLayout_10 = QtGui.QHBoxLayout()
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         self.quality_label = QtGui.QLabel(lazySiouxsie)
@@ -230,15 +244,15 @@ class Ui_lazySiouxsie(object):
         self.scene_lights.setChecked(False)
         self.scene_lights.setObjectName("scene_lights")
         self.horizontalLayout_9.addWidget(self.scene_lights)
-        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_9.addItem(spacerItem4)
+        spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_9.addItem(spacerItem5)
         self.ground_plane = QtGui.QCheckBox(lazySiouxsie)
         self.ground_plane.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.ground_plane.setChecked(True)
         self.ground_plane.setObjectName("ground_plane")
         self.horizontalLayout_9.addWidget(self.ground_plane)
-        spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_9.addItem(spacerItem5)
+        spacerItem6 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_9.addItem(spacerItem6)
         self.chrome_balls = QtGui.QCheckBox(lazySiouxsie)
         self.chrome_balls.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.chrome_balls.setChecked(True)
@@ -267,8 +281,8 @@ class Ui_lazySiouxsie(object):
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        spacerItem6 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem6)
+        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(spacerItem7)
         self.cancel_btn = QtGui.QPushButton(lazySiouxsie)
         self.cancel_btn.setObjectName("cancel_btn")
         self.horizontalLayout_4.addWidget(self.cancel_btn)
@@ -428,6 +442,10 @@ class Ui_lazySiouxsie(object):
         self.render_slices.setItemText(35, QtGui.QApplication.translate("lazySiouxsie", "175", None))
         self.render_slices.setItemText(36, QtGui.QApplication.translate("lazySiouxsie", "180", None))
         self.degreeLabel.setText(QtGui.QApplication.translate("lazySiouxsie", "°", None))
+        self.label.setText(QtGui.QApplication.translate("lazySiouxsie", "Render Format", None))
+        self.render_format.setItemText(0, QtGui.QApplication.translate("lazySiouxsie", "png", None))
+        self.render_format.setItemText(1, QtGui.QApplication.translate("lazySiouxsie", "jpg", None))
+        self.render_format.setItemText(2, QtGui.QApplication.translate("lazySiouxsie", "exr", None))
         self.quality_label.setText(QtGui.QApplication.translate("lazySiouxsie", "Quality", None))
         self.quality_slider.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "The quality setting for the renderer.  ", None))
         self.quality_slider.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "The quality setting for the renderer.  ", None))

@@ -64,6 +64,32 @@ class LazySiouxsie(QtGui.QWidget):
         # first, call the base class and let it do its thing.
         QtGui.QWidget.__init__(self)
 
+        self.arnold_formate = {
+            'png': 'png',
+            'jpg': 'jpeg',
+            'tif': 'tif',
+            'mtoa_shaders': 'mtoa_shaders',
+            'exr(deep)': 'deepexr',
+            'exr': 'exr',
+            'mplay': 'mplay',
+            'maya': 'maya'
+        }
+        self.vray_formats = {
+            'png': 'png',
+            'jpg': 'jpg',
+            'vrimg': 'vrimg',
+            'hdr': 'hdr',
+            'exr(singlepass)': 'exr',
+            'exr': 'exr (multichannel)',
+            'tga': 'tga',
+            'bmp': 'bmp',
+            'sgi': 'sgi',
+            'tif': 'tif',
+            'vrsm': 'vrsm',
+            'vrst': 'vrst',
+            'exr(deep)': 'exr(deep)'
+        }
+
         # now load in the UI that was created in the UI designer
         self.ui = Ui_lazySiouxsie()
         self.ui.setupUi(self)
@@ -144,6 +170,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.total_frames.setEnabled(False)
         self.ui.startFrame.valueChanged.connect(self.set_frames)
         self.ui.endFrame.valueChanged.connect(self.set_frames)
+        self.ui.render_format.setCurrentText(self.render_format)
 
     def set_frames(self):
         start = self.ui.startFrame.value()
@@ -337,153 +364,127 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.connectAttr('%s.outColor' % file_node, 'vraySettings.cam_envtexBg', f=True)
 
     def setup_rendering_engine(self, renderer=None, render_format=None, task=None, filename=None, cam=None):
-        self.ui.build_progress.setValue(69)
-        self.ui.status_label.setText('Getting UI and scene render settings...')
-        split_path = filename.rsplit('.', 1)[0]
-        version = split_path.rsplit('_', 1)[1]
-        pixel_aspect = self.ui.pixel_aspect.text()
-        resolutionWidth = int(self.ui.res_width.text())
-        resolutionHeight = int(self.ui.res_height.text())
-        resolution_scale = self.ui.res_scale.currentText()
-        start_frame = float(self.ui.startFrame.text())
-        end_frame = float(self.ui.endFrame.text())
-        quality = self.ui.quality_value.value()
-        resolution_scale = float(resolution_scale.strip('%'))
-        resolution_scale /= 100
-        resolutionHeight *= resolution_scale
-        resolutionWidth *= resolution_scale
-        vrayImageFormats = {
-            'png': 'png',
-            'jpg': 'jpg',
-            'vrimg': 'vrimg',
-            'hdr': 'hdr',
-            'exr(singlepass)': 'exr',
-            'exr': 'exr (multichannel)',
-            'tga': 'tga',
-            'bmp': 'bmp',
-            'sgi': 'sgi',
-            'tif': 'tif',
-            'vrsm': 'vrsm',
-            'vrst': 'vrst',
-            'exr(deep)': 'exr(deep)'
-        }
-        # Arnold Image Format Command: cmds.setAttr( 'defaultArnoldDriver.ai_translator', 'exr', type='string' )
-        # Arnold Image Format Options List:
-        arnoldImageFormats = {
-            'png': 'png',
-            'jpg': 'jpeg',
-            'tif': 'tif',
-            'mtoa_shaders': 'mtoa_shaders',
-            'exr(deep)': 'deepexr',
-            'exr': 'exr',
-            'mplay': 'mplay',
-            'maya': 'maya'
-        }
-
-        if renderer == 'vray':
+        if renderer:
             self.ui.build_progress.setValue(69)
-            self.ui.status_label.setText('Creating VRay settings...')
-            cmds.setAttr('vraySettings.aspectLock', 0)
-            cmds.setAttr('vraySettings.animType', 1)
-            cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
-            cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
-            self.ui.build_progress.setValue(70)
-            self.ui.status_label.setText('Checking plugins...')
-            if not cmds.pluginInfo('vrayformaya', q=True, l=True):
-                try:
-                    cmds.loadPlugin('vrayformaya')
-                except:
-                    print 'CANNOT LOAD V-RAY'
+            self.ui.status_label.setText('Getting UI and scene render settings...')
+            split_path = filename.rsplit('.', 1)[0]
+            version = split_path.rsplit('_', 1)[1]
+            pixel_aspect = self.ui.pixel_aspect.text()
+            resolutionWidth = int(self.ui.res_width.text())
+            resolutionHeight = int(self.ui.res_height.text())
+            resolution_scale = self.ui.res_scale.currentText()
+            start_frame = float(self.ui.startFrame.text())
+            end_frame = float(self.ui.endFrame.text())
+            quality = self.ui.quality_value.value()
+            resolution_scale = float(resolution_scale.strip('%'))
+            resolution_scale /= 100
+            resolutionHeight *= resolution_scale
+            resolutionWidth *= resolution_scale
 
-            self.ui.build_progress.setValue(71)
-            self.ui.status_label.setText('Setting engine...')
-            cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+            if renderer == 'vray':
+                self.ui.build_progress.setValue(69)
+                self.ui.status_label.setText('Creating VRay settings...')
+                cmds.setAttr('vraySettings.aspectLock', 0)
+                cmds.setAttr('vraySettings.animType', 1)
+                cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+                cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+                self.ui.build_progress.setValue(70)
+                self.ui.status_label.setText('Checking plugins...')
+                if not cmds.pluginInfo('vrayformaya', q=True, l=True):
+                    try:
+                        cmds.loadPlugin('vrayformaya')
+                    except:
+                        print 'CANNOT LOAD V-RAY'
 
-            self.ui.build_progress.setValue(72)
-            self.ui.status_label.setText('Creating render string...')
-            pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
-            cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
+                self.ui.build_progress.setValue(71)
+                self.ui.status_label.setText('Setting engine...')
+                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
 
-            self.ui.build_progress.setValue(73)
-            self.ui.status_label.setText('Setting up frame sizes and image format...')
-            cmds.setAttr('vraySettings.width', int(resolutionWidth))
-            cmds.setAttr('vraySettings.height', int(resolutionHeight))
-            cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
+                self.ui.build_progress.setValue(72)
+                self.ui.status_label.setText('Creating render string...')
+                pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
+                cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
 
-            output = render_format.lower()
-            cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
+                self.ui.build_progress.setValue(73)
+                self.ui.status_label.setText('Setting up frame sizes and image format...')
+                cmds.setAttr('vraySettings.width', int(resolutionWidth))
+                cmds.setAttr('vraySettings.height', int(resolutionHeight))
+                cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
 
-            self.ui.build_progress.setValue(74)
-            self.ui.status_label.setText('Calculating quality settings...')
-            dmc_maxSubDivs = int(2.4 * quality)
-            dmc_threshold = 0.1 / quality
-            # Adaptive Amount base on the following equation with constants figured out from domain and range variables
-            # d = Adaptive Amplitude
-            # r = Adaptive Slope
-            # f(x) = d * arctan(r * x) - 1.05
-            adaptive_amplitude = 1.35950130973274
-            adaptive_slope = 0.99
-            adaptive_amount = adaptive_amplitude * math.atan(adaptive_slope * float(quality)) - 1.05
-            # Adaptive Threshold based on the following equation with constants figured out from domain/range variables
-            # d = Threshold Amplitude
-            # f(x) = -d * arctan(x) + 0.195
-            threshold_amplitude = 0.12915262442461
-            adaptive_threshold = ((-1 * threshold_amplitude) * math.atan(float(quality))) + 0.195
+                output = render_format.lower()
+                cmds.setAttr('vraySettings.imageFormatStr', self.vrayImageFormats[output], type='string')
 
-            self.ui.build_progress.setValue(75)
-            self.ui.status_label.setText('Setting render quality...')
-            cmds.setAttr('vraySettings.samplerType', 4)
-            cmds.setAttr('vraySettings.minShadeRate', quality)
-            cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
-            cmds.setAttr('vraySettings.dmcMaxSubdivs', dmc_maxSubDivs)
-            cmds.setAttr('vraySettings.dmcThreshold', dmc_threshold)
-            cmds.setAttr('vraySettings.dmcs_adaptiveAmount', adaptive_amount)
-            cmds.setAttr('vraySettings.dmcs_adaptiveThreshold', adaptive_threshold)
-            cmds.setAttr('vraySettings.giOn', 1)
+                self.ui.build_progress.setValue(74)
+                self.ui.status_label.setText('Calculating quality settings...')
+                dmc_maxSubDivs = int(2.4 * quality)
+                dmc_threshold = 0.1 / quality
+                # Adaptive Amount base on the following equation with constants figured out from domain and range variables
+                # d = Adaptive Amplitude
+                # r = Adaptive Slope
+                # f(x) = d * arctan(r * x) - 1.05
+                adaptive_amplitude = 1.35950130973274
+                adaptive_slope = 0.99
+                adaptive_amount = adaptive_amplitude * math.atan(adaptive_slope * float(quality)) - 1.05
+                # Adaptive Threshold based on the following equation with constants figured out from domain/range variables
+                # d = Threshold Amplitude
+                # f(x) = -d * arctan(x) + 0.195
+                threshold_amplitude = 0.12915262442461
+                adaptive_threshold = ((-1 * threshold_amplitude) * math.atan(float(quality))) + 0.195
 
-        elif renderer == 'arnold':
-            self.ui.build_progress.setValue(69)
-            self.ui.status_label.setText('Checking plugins...')
-            if not cmds.pluginInfo('mtoa', q=True, l=True):
-                try:
-                    cmds.loadPlugin('mtoa')
-                except:
-                    print 'CANNOT LOAD ARNOLD!'
-            self.ui.build_progress.setValue(71)
-            self.ui.status_label.setText('Setting engine and output path...')
-            pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
+                self.ui.build_progress.setValue(75)
+                self.ui.status_label.setText('Setting render quality...')
+                cmds.setAttr('vraySettings.samplerType', 4)
+                cmds.setAttr('vraySettings.minShadeRate', quality)
+                cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
+                cmds.setAttr('vraySettings.dmcMaxSubdivs', dmc_maxSubDivs)
+                cmds.setAttr('vraySettings.dmcThreshold', dmc_threshold)
+                cmds.setAttr('vraySettings.dmcs_adaptiveAmount', adaptive_amount)
+                cmds.setAttr('vraySettings.dmcs_adaptiveThreshold', adaptive_threshold)
+                cmds.setAttr('vraySettings.giOn', 1)
 
-            cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
-            self.ui.build_progress.setValue(72)
-            self.ui.status_label.setText('Setting up frame range and output settings...')
-            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
-            cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
-            cmds.setAttr('defaultRenderGlobals.animation', 1)
-            cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
-            cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
-            cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
-            cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
+            elif renderer == 'arnold':
+                self.ui.build_progress.setValue(69)
+                self.ui.status_label.setText('Checking plugins...')
+                if not cmds.pluginInfo('mtoa', q=True, l=True):
+                    try:
+                        cmds.loadPlugin('mtoa')
+                    except:
+                        print 'CANNOT LOAD ARNOLD!'
+                self.ui.build_progress.setValue(71)
+                self.ui.status_label.setText('Setting engine and output path...')
+                pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
 
-            self.ui.build_progress.setValue(73)
-            self.ui.status_label.setText('Setting resolution and file format...')
-            cmds.setAttr('defaultResolution.width', resolutionWidth)
-            cmds.setAttr('defaultResolution.height', resolutionHeight)
+                cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
+                self.ui.build_progress.setValue(72)
+                self.ui.status_label.setText('Setting up frame range and output settings...')
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
+                cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
+                cmds.setAttr('defaultRenderGlobals.animation', 1)
+                cmds.setAttr('defaultRenderGlobals.putFrameBeforeExt', 1)
+                cmds.setAttr('defaultRenderGlobals.extensionPadding', 4)
+                cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
+                cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
 
-            output = render_format.lower()
-            cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
+                self.ui.build_progress.setValue(73)
+                self.ui.status_label.setText('Setting resolution and file format...')
+                cmds.setAttr('defaultResolution.width', resolutionWidth)
+                cmds.setAttr('defaultResolution.height', resolutionHeight)
 
-            self.ui.build_progress.setValue(74)
-            self.ui.status_label.setText('Calculating quality settings...')
-            quality_mult = 0.4
-            secondary_samples = int(math.ceil(quality * quality_mult))
-            self.ui.build_progress.setValue(75)
-            self.ui.status_label.setText('Setting rendering quality...')
-            cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
-            cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
-            cmds.setAttr('defaultArnoldRenderOptions.GISpecularSamples', secondary_samples)
-            cmds.setAttr('defaultArnoldRenderOptions.GITransmissionSamples', secondary_samples)
-            cmds.setAttr('defaultArnoldRenderOptions.GISssSamples', secondary_samples)
-            cmds.setAttr('defaultArnoldRenderOptions.GIVolumeSamples', (secondary_samples - 1))
+                output = render_format.lower()
+                cmds.setAttr('defaultArnoldDriver.ai_translator', self.arnoldImageFormats[output], type='string')
+
+                self.ui.build_progress.setValue(74)
+                self.ui.status_label.setText('Calculating quality settings...')
+                quality_mult = 0.4
+                secondary_samples = int(math.ceil(quality * quality_mult))
+                self.ui.build_progress.setValue(75)
+                self.ui.status_label.setText('Setting rendering quality...')
+                cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
+                cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
+                cmds.setAttr('defaultArnoldRenderOptions.GISpecularSamples', secondary_samples)
+                cmds.setAttr('defaultArnoldRenderOptions.GITransmissionSamples', secondary_samples)
+                cmds.setAttr('defaultArnoldRenderOptions.GISssSamples', secondary_samples)
+                cmds.setAttr('defaultArnoldRenderOptions.GIVolumeSamples', (secondary_samples - 1))
 
     def texture_chrome_balls(self, spheres=None, renderer=None):
         materials = {}
@@ -1014,7 +1015,7 @@ class LazySiouxsie(QtGui.QWidget):
         job_info += 'MachineName=%s\n' % platform.node()
         job_info += 'Plugin=MayaCmd\n'
         job_info += 'OutputDirectory0=\n'  # Needs Data
-        job_info += 'OutputFilename0=\n'  #  Needs Data
+        job_info += 'OutputFilename0=\n'  # Needs Data
         job_info += 'EventOptIns='
         job_info_file.write(job_info)
         job_info_file.close()
