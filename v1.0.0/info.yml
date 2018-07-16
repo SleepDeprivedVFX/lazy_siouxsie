@@ -31,6 +31,18 @@ configuration:
         description: The render format for the turntables
         allows_empty: False
 
+    deadline_connection:
+        type: str
+        default_value: http://deadline.asc-vfx.com
+        description: The URL to the Deadline API
+        allows_empty: False
+
+    deadline_port:
+        type: int
+        default_value: 8082
+        description: The port to the API
+        allows_empty: False
+
 # this app works in all engines - it does not contain 
 # any host application specific commands
 supported_engines: 

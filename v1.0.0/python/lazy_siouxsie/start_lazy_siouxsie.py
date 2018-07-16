@@ -298,15 +298,15 @@ class LazySiouxsie(QtGui.QWidget):
                                         task=self.turntable_task, filename=next_file, cam=camera)
             # Send to the farm.
 
-            self.ui.build_progress.setValue(80)
+            self.ui.build_progress.setValue(76)
             self.ui.status_label.setText('Creating Deadline Job...')
             self.submit_to_deadlin(start=start, end=extended_end, renderer=rendering_engine, camera=camera)
 
             # Finalizing
-            self.ui.build_progress.setValue(90)
+            self.ui.build_progress.setValue(96)
             self.ui.status_label.setText('Saving Turntable file...')
             cmds.file(s=True)
-            self.ui.build_progress.setValue(95)
+            self.ui.build_progress.setValue(99)
             self.ui.status_label.setText('Reopening the main file...')
             file_to_return = self.ui.file_path.text()
             cmds.file(file_to_return, o=True)
@@ -381,13 +381,13 @@ class LazySiouxsie(QtGui.QWidget):
         }
 
         if renderer == 'vray':
-            self.ui.build_progress.setValue(70)
+            self.ui.build_progress.setValue(69)
             self.ui.status_label.setText('Creating VRay settings...')
             cmds.setAttr('vraySettings.aspectLock', 0)
             cmds.setAttr('vraySettings.animType', 1)
             cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
             cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
-            self.ui.build_progress.setValue(72)
+            self.ui.build_progress.setValue(70)
             self.ui.status_label.setText('Checking plugins...')
             if not cmds.pluginInfo('vrayformaya', q=True, l=True):
                 try:
@@ -395,16 +395,16 @@ class LazySiouxsie(QtGui.QWidget):
                 except:
                     print 'CANNOT LOAD V-RAY'
 
-            self.ui.build_progress.setValue(74)
+            self.ui.build_progress.setValue(71)
             self.ui.status_label.setText('Setting engine...')
             cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
 
-            self.ui.build_progress.setValue(76)
+            self.ui.build_progress.setValue(72)
             self.ui.status_label.setText('Creating render string...')
             pathSettings = '%s/<layer>/%s/<layer>_<scene>' % (task, version)
             cmds.setAttr('vraySettings.fileNamePrefix', pathSettings, type='string')
 
-            self.ui.build_progress.setValue(77)
+            self.ui.build_progress.setValue(73)
             self.ui.status_label.setText('Setting up frame sizes and image format...')
             cmds.setAttr('vraySettings.width', int(resolutionWidth))
             cmds.setAttr('vraySettings.height', int(resolutionHeight))
@@ -413,7 +413,7 @@ class LazySiouxsie(QtGui.QWidget):
             output = render_format.lower()
             cmds.setAttr('vraySettings.imageFormatStr', vrayImageFormats[output], type='string')
 
-            self.ui.build_progress.setValue(78)
+            self.ui.build_progress.setValue(74)
             self.ui.status_label.setText('Calculating quality settings...')
             dmc_maxSubDivs = int(2.4 * quality)
             dmc_threshold = 0.1 / quality
@@ -430,7 +430,7 @@ class LazySiouxsie(QtGui.QWidget):
             threshold_amplitude = 0.12915262442461
             adaptive_threshold = ((-1 * threshold_amplitude) * math.atan(float(quality))) + 0.195
 
-            self.ui.build_progress.setValue(79)
+            self.ui.build_progress.setValue(75)
             self.ui.status_label.setText('Setting render quality...')
             cmds.setAttr('vraySettings.samplerType', 4)
             cmds.setAttr('vraySettings.minShadeRate', quality)
@@ -442,19 +442,19 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setAttr('vraySettings.giOn', 1)
 
         elif renderer == 'arnold':
-            self.ui.build_progress.setValue(70)
+            self.ui.build_progress.setValue(69)
             self.ui.status_label.setText('Checking plugins...')
             if not cmds.pluginInfo('mtoa', q=True, l=True):
                 try:
                     cmds.loadPlugin('mtoa')
                 except:
                     print 'CANNOT LOAD ARNOLD!'
-            self.ui.build_progress.setValue(72)
+            self.ui.build_progress.setValue(71)
             self.ui.status_label.setText('Setting engine and output path...')
             pathSettings = '%s/<RenderLayer>/%s/<RenderLayer>_<Scene>' % (task, version)
 
             cmds.setAttr('defaultRenderGlobals.ren', renderer, type='string')
-            self.ui.build_progress.setValue(74)
+            self.ui.build_progress.setValue(72)
             self.ui.status_label.setText('Setting up frame range and output settings...')
             cmds.setAttr('defaultRenderGlobals.imageFilePrefix', pathSettings, type='string')
             cmds.setAttr('defaultRenderGlobals.outFormatControl', 0)
@@ -464,7 +464,7 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setAttr('defaultRenderGlobals.startFrame', start_frame)
             cmds.setAttr('defaultRenderGlobals.endFrame', end_frame)
 
-            self.ui.build_progress.setValue(76)
+            self.ui.build_progress.setValue(73)
             self.ui.status_label.setText('Setting resolution and file format...')
             cmds.setAttr('defaultResolution.width', resolutionWidth)
             cmds.setAttr('defaultResolution.height', resolutionHeight)
@@ -472,11 +472,11 @@ class LazySiouxsie(QtGui.QWidget):
             output = render_format.lower()
             cmds.setAttr('defaultArnoldDriver.ai_translator', arnoldImageFormats[output], type='string')
 
-            self.ui.build_progress.setValue(77)
+            self.ui.build_progress.setValue(74)
             self.ui.status_label.setText('Calculating quality settings...')
             quality_mult = 0.4
             secondary_samples = int(math.ceil(quality * quality_mult))
-            self.ui.build_progress.setValue(78)
+            self.ui.build_progress.setValue(75)
             self.ui.status_label.setText('Setting rendering quality...')
             cmds.setAttr('defaultArnoldRenderOptions.AASamples', quality)
             cmds.setAttr('defaultArnoldRenderOptions.GIDiffuseSamples', secondary_samples)
@@ -947,13 +947,17 @@ class LazySiouxsie(QtGui.QWidget):
         IgnoreError211=1
         :return:
         '''
+        self.ui.build_progress.setValue(77)
+        self.ui.status_label.setText('Collect Deadline Pools...')
         all_pools = self.list_deadline_pools()
 
+        self.ui.build_progress.setValue(78)
+        self.ui.status_label.setText('Setup Deadline Environments and Datetime...')
         job_info = ''
         plugin_info = ''
-        dependent_id = None
-        base_name = os.path.basename(self.ui.file_path.text()).rsplit('.', 1)[0]
-        print base_name
+        file_name = cmds.file(q=True, sn=True)
+        base_name = os.path.basename(file_name).rsplit('.', 1)[0]
+        # Get some shit from shotgun: Project path, render path, that sort of shit
         job_path = os.environ['TEMP'] + '\\_job_submissions'
         if not os.path.exists(job_path):
             os.mkdir(job_path)
@@ -994,6 +998,8 @@ class LazySiouxsie(QtGui.QWidget):
         resolutionHeight *= resolution_scale
         resolutionWidth *= resolution_scale
 
+        self.ui.build_progress.setValue(79)
+        self.ui.status_label.setText('Create Job Info File...')
         job_info += 'Name=%s\n' % base_name
         job_info += 'UserName=%s\n' % user_name
         job_info += 'Region=none\n'
@@ -1014,6 +1020,8 @@ class LazySiouxsie(QtGui.QWidget):
         job_info_file.close()
 
         # Setup PluginInfo
+        self.ui.build_progress.setValue(80)
+        self.ui.status_label.setText('Build Plugin Info File...')
         plugin_info += 'Animation=1\n'
         plugin_info += 'Renderer=%s\n' % renderer
         plugin_info += 'UsingRenderLayers=1\n'
@@ -1036,10 +1044,46 @@ class LazySiouxsie(QtGui.QWidget):
         plugin_info += 'ImageHeight=%s\n' % resolutionHeight
         plugin_info += 'OutputFilePath=%s\n'  # Needs Data
         plugin_info += 'OutputFilePrefix=%s\n'  # Needs Data
-        plugin_info += 'Camera=%s\n' % camera
+        plugin_info += 'Camera=%s\n' % camera[0]
         plugin_info += 'IgnoreError211=1'
         plugin_info_file.write(plugin_info)
         plugin_info_file.close()
+
+        self.ui.build_progress.setValue(81)
+        self.ui.status_label.setText('Getting slice status. Ignore 0 degrees...')
+        degree_slice = self.ui.render_slices.currentText()
+        degree = float(degree_slice)
+        frame_range = float(end - start + 1)
+        slice_mult = frame_range / 360.00
+        slice_frames = int(slice_mult * degree)
+        slice_frame = 0
+        try:
+            self.ui.build_progress.setValue(82)
+            self.ui.status_label.setText('Submitting the Job to Deadline...')
+            submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+            # Setup slice conditions here, to then suspend specific job tasks.
+            if submitted and degree != 0:
+                self.ui.build_progress.setValue(83)
+                self.ui.status_label.setText('Parsing Slices...')
+                job_id = submitted['_id']
+                tasks = self.dl.Tasks.GetJobTasks(job_id)
+                task_count = len(tasks)
+                task_percent = 12.0 / float(task_count)
+                percent = 84.0
+                for task in tasks['Tasks']:
+                    task_id = int(task['TaskID'])
+                    task_frame = task_id
+                    percent += task_percent
+                    if task_frame != slice_frame:
+                        self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
+                    else:
+                        self.ui.build_progress.setValue(int(percent))
+                        self.ui.status_label.setText('Setting %i Frame to Render...' % task_frame)
+                        slice_frame += slice_frames
+
+        except Exception, e:
+            submitted = False
+            print 'FAILED! %s' % e
 
     def list_deadline_pools(self):
         try:
