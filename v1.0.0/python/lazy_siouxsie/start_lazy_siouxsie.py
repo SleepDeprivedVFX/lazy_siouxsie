@@ -1070,16 +1070,19 @@ class LazySiouxsie(QtGui.QWidget):
                 task_count = len(tasks)
                 task_percent = 12.0 / float(task_count)
                 percent = 84.0
+                task_list = []
                 for task in tasks['Tasks']:
                     task_id = int(task['TaskID'])
-                    task_frame = task_id
                     percent += task_percent
-                    if task_frame != slice_frame:
-                        self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
+                    if task_id != slice_frame:
+                        # self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
+                        task_list.append(task_id)
                     else:
                         self.ui.build_progress.setValue(int(percent))
-                        self.ui.status_label.setText('Setting %i Frame to Render...' % task_frame)
+                        self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
                         slice_frame += slice_frames
+                if task_list:
+                    self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
 
         except Exception, e:
             submitted = False
