@@ -418,14 +418,16 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.status_label.setText('Calculating quality settings...')
                 dmc_maxSubDivs = int(2.4 * quality)
                 dmc_threshold = 0.1 / quality
-                # Adaptive Amount base on the following equation with constants figured out from domain and range variables
+                # Adaptive Amount base on the following equation with constants figured out from domain and range
+                # variables
                 # d = Adaptive Amplitude
                 # r = Adaptive Slope
                 # f(x) = d * arctan(r * x) - 1.05
                 adaptive_amplitude = 1.35950130973274
                 adaptive_slope = 0.99
                 adaptive_amount = adaptive_amplitude * math.atan(adaptive_slope * float(quality)) - 1.05
-                # Adaptive Threshold based on the following equation with constants figured out from domain/range variables
+                # Adaptive Threshold based on the following equation with constants figured out from domain/range
+                # variables
                 # d = Threshold Amplitude
                 # f(x) = -d * arctan(x) + 0.195
                 threshold_amplitude = 0.12915262442461
@@ -471,7 +473,7 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('defaultResolution.height', resolutionHeight)
 
                 output = render_format.lower()
-                cmds.setAttr('defaultArnoldDriver.ai_translator', self.arnoldImageFormats[output], type='string')
+                cmds.setAttr('defaultArnoldDriver.ai_translator', self.arnold_formate[output], type='string')
 
                 self.ui.build_progress.setValue(74)
                 self.ui.status_label.setText('Calculating quality settings...')
@@ -925,6 +927,25 @@ class LazySiouxsie(QtGui.QWidget):
         submitted = self.dl.Jobs.SubmitJobFiles(jobInfo, PluginInfo, idOnly=True)
         That should be it.
 
+        Name=BE_4700_lookdev.main_v037 - BE_4700_shotCam1:shotCam1
+        UserName=matt
+        Region=none
+        Comment=Ramp Reveals 1075x858
+        Frames=1001-1185
+        Pool=vrscene
+        Priority=85
+        Blacklist=
+        MachineLimit=4
+        ScheduledStartDateTime=02/07/2018 11:44
+        OverrideTaskExtraInfoNames=False
+        MachineName=DESKTOP-FERDJRG
+        Plugin=MayaCmd
+        OutputDirectory0=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700/publish/renders/BE_4700_shotCam1_shotCam1
+        OutputFilename0=BE_4700_lookdev.main_v037.####.exr
+        EventOptIns=
+
+        NEED TO SETUP RENDER LAYER TEST FOR FULL FUNCTIONALITY!!!
+
         Example Plugin
 
         UseLegacyRenderLayers=0
@@ -948,17 +969,30 @@ class LazySiouxsie(QtGui.QWidget):
         IgnoreError211=1
         :return:
         '''
+
         self.ui.build_progress.setValue(77)
         self.ui.status_label.setText('Collect Deadline Pools...')
         all_pools = self.list_deadline_pools()
+        ext = self.ui.render_format.currentText()
 
         self.ui.build_progress.setValue(78)
         self.ui.status_label.setText('Setup Deadline Environments and Datetime...')
         job_info = ''
         plugin_info = ''
         file_name = cmds.file(q=True, sn=True)
+        file_path = os.path.dirname(file_name)
+        path_settings = self.sg.templates['maya_asset_work']
+        task = path_settings.get_fields(file_name)
         base_name = os.path.basename(file_name).rsplit('.', 1)[0]
-        # Get some shit from shotgun: Project path, render path, that sort of shit
+        project = self.project.lower()
+        proj_root = '%s%s/assets/%s/%s' % (file_path.split(project)[0], project, task['sg_asset_type'], task['Asset'])
+        # {'version': 67, 'sg_asset_type': u'Character', 'Asset': u'Thing3', 'task_name': u'turntable.main',
+        #  'extension': u'mb'}
+        output_path = '%s/publish/renders/' % proj_root
+        version = task['version']
+        output_file = '%s.####.%s' % (base_name, ext)
+        prefix = '%s/v%03d/%s' % (task['task_name'], version, base_name)
+        # Path to Deadline Job Files
         job_path = os.environ['TEMP'] + '\\_job_submissions'
         if not os.path.exists(job_path):
             os.mkdir(job_path)
@@ -1006,16 +1040,23 @@ class LazySiouxsie(QtGui.QWidget):
         job_info += 'Region=none\n'
         job_info += 'Comment=Lazy Siouxsie Automatic Turntable\n'
         job_info += 'Frames=%s\n' % frames
+        job_info += 'ChunkSize=1000000\n'
         job_info += 'Pool=%s\n' % pool
         job_info += 'Priority=65\n'
         job_info += 'Blacklist=\n'
         job_info += 'MachineLimit=5\n'
         job_info += 'ScheduledStartDateTime=%s/%s/%s %s:%s\n' % (D, M, Y, h, m)
+        job_info += 'ExtraInfo0=%s\n' % task['task_name']
+        job_info += 'ExtraInfo1=%s\n' % project
+        job_info += 'ExtraInfo2=%s\n' % task['Asset']
+        job_info += 'ExtraInfo3=%s\n' % base_name
+        job_info += 'ExtraInfo4=Lazy Siouxsie Turntable\n'
+        job_info += 'ExtraInfo5=%s\n' % user_name
         job_info += 'OverrideTaskExtraInfoNames=False\n'
         job_info += 'MachineName=%s\n' % platform.node()
         job_info += 'Plugin=MayaCmd\n'
-        job_info += 'OutputDirectory0=\n'  # Needs Data
-        job_info += 'OutputFilename0=\n'  # Needs Data
+        job_info += 'OutputDirectory0=%s<RenderLayer>/%s/v%03d\n' % (output_path, task['task_name'], version)
+        job_info += 'OutputFilename0=%s\n' % output_file
         job_info += 'EventOptIns='
         job_info_file.write(job_info)
         job_info_file.close()
@@ -1039,13 +1080,16 @@ class LazySiouxsie(QtGui.QWidget):
         else:
             win = '32bit'
         plugin_info += 'Build=%s\n' % win
-        plugin_info += 'ProjectPath=%s\n'  # Needs Data
+        plugin_info += 'ProjectPath=%s\n' % proj_root
         plugin_info += 'CommandLineOptions=\n'
         plugin_info += 'ImageWidth=%s\n' % resolutionWidth
         plugin_info += 'ImageHeight=%s\n' % resolutionHeight
-        plugin_info += 'OutputFilePath=%s\n'  # Needs Data
-        plugin_info += 'OutputFilePrefix=%s\n'  # Needs Data
+        plugin_info += 'OutputFilePath=%s\n' % output_path
+        plugin_info += 'OutputFilePrefix=%s\n' % prefix
         plugin_info += 'Camera=%s\n' % camera[0]
+        plugin_info += 'Camera0=\nCamera1=%s\n' % camera[0]
+        plugin_info += 'Camera2=front\nCamera3=persp\nCamera4=side\nCamera5=top\n'
+        plugin_info += 'SceneFile=%s\n' % file_name
         plugin_info += 'IgnoreError211=1'
         plugin_info_file.write(plugin_info)
         plugin_info_file.close()
@@ -1062,6 +1106,7 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(82)
             self.ui.status_label.setText('Submitting the Job to Deadline...')
             submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+
             # Setup slice conditions here, to then suspend specific job tasks.
             if submitted and degree != 0:
                 self.ui.build_progress.setValue(83)
@@ -1076,7 +1121,7 @@ class LazySiouxsie(QtGui.QWidget):
                     task_id = int(task['TaskID'])
                     percent += task_percent
                     if task_id != slice_frame:
-                        # self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
+                        self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
                         task_list.append(task_id)
                     else:
                         self.ui.build_progress.setValue(int(percent))
