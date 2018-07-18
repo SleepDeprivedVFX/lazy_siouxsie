@@ -315,8 +315,9 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(62)
             self.ui.status_label.setText('Begin Layers Setup...')
-            self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane, light_trans=light_trans,
-                                     hdri_list=selected_hdri, lights=get_scene_lights, balls=spheres)
+            layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane,
+                                              light_trans=light_trans, hdri_list=selected_hdri, lights=get_scene_lights,
+                                              balls=spheres)
 
             self.ui.build_progress.setValue(68)
             self.ui.status_label.setText('Setting render settings...')
@@ -327,7 +328,8 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(76)
             self.ui.status_label.setText('Creating Deadline Job...')
-            self.submit_to_deadlin(start=start, end=extended_end, renderer=rendering_engine, camera=camera)
+            self.submit_to_deadline(start=start, end=extended_end, renderer=rendering_engine, camera=camera,
+                                    layers=layers)
 
             # Finalizing
             self.ui.build_progress.setValue(96)
@@ -412,7 +414,7 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
 
                 output = render_format.lower()
-                cmds.setAttr('vraySettings.imageFormatStr', self.vrayImageFormats[output], type='string')
+                cmds.setAttr('vraySettings.imageFormatStr', self.vray_formats[output], type='string')
 
                 self.ui.build_progress.setValue(74)
                 self.ui.status_label.setText('Calculating quality settings...')
@@ -437,12 +439,13 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.status_label.setText('Setting render quality...')
                 cmds.setAttr('vraySettings.samplerType', 4)
                 cmds.setAttr('vraySettings.minShadeRate', quality)
+                cmds.setAttr('vraySettings.giOn', 1)
+                cmds.setAttr('vraySettings.cam_overrideEnvtex', 1)
                 cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
                 cmds.setAttr('vraySettings.dmcMaxSubdivs', dmc_maxSubDivs)
                 cmds.setAttr('vraySettings.dmcThreshold', dmc_threshold)
                 cmds.setAttr('vraySettings.dmcs_adaptiveAmount', adaptive_amount)
                 cmds.setAttr('vraySettings.dmcs_adaptiveThreshold', adaptive_threshold)
-                cmds.setAttr('vraySettings.giOn', 1)
 
             elif renderer == 'arnold':
                 self.ui.build_progress.setValue(69)
@@ -620,7 +623,7 @@ class LazySiouxsie(QtGui.QWidget):
 
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
                             lights=[], balls=[]):
-
+        layers = []
         self.ui.build_progress.setValue(63)
         self.ui.status_label.setText('Setting up render layers...')
         rs = renderSetup.instance()
@@ -669,12 +672,14 @@ class LazySiouxsie(QtGui.QWidget):
                 basename = os.path.basename(hdri)
                 base = os.path.splitext(basename)[0]
                 render_layer = rs.createRenderLayer(base)
+                layers.append(base)
                 collection_set = render_layer.createCollection('Scene_%s' % base)
                 collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
         rs.switchToLayer(None)
+        return layers
 
     def get_scene_lights(self, renderer=None):
         lights = []
@@ -917,7 +922,7 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setKeyframe('%s.ry' % trans, v=25, ott='linear', t=start)
             cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
 
-    def submit_to_deadlin(self, start=1, end=144, renderer=None, width=None, height=None, camera=None):
+    def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
         '''
         I'll need a command line string with all the settings.  It will then be placed into something like this:
         batch_string = str('mayabatch -file %s -command "%s"' % (self.file_path, str(command_string)))
@@ -990,8 +995,10 @@ class LazySiouxsie(QtGui.QWidget):
         #  'extension': u'mb'}
         output_path = '%s/publish/renders/' % proj_root
         version = task['version']
-        output_file = '%s.####.%s' % (base_name, ext)
         prefix = '%s/v%03d/%s' % (task['task_name'], version, base_name)
+        full_render_dir = output_path + prefix
+        if not os.path.exists(full_render_dir):
+            os.makedirs(full_render_dir)
         # Path to Deadline Job Files
         job_path = os.environ['TEMP'] + '\\_job_submissions'
         if not os.path.exists(job_path):
@@ -1040,7 +1047,6 @@ class LazySiouxsie(QtGui.QWidget):
         job_info += 'Region=none\n'
         job_info += 'Comment=Lazy Siouxsie Automatic Turntable\n'
         job_info += 'Frames=%s\n' % frames
-        job_info += 'ChunkSize=1000000\n'
         job_info += 'Pool=%s\n' % pool
         job_info += 'Priority=65\n'
         job_info += 'Blacklist=\n'
@@ -1055,8 +1061,12 @@ class LazySiouxsie(QtGui.QWidget):
         job_info += 'OverrideTaskExtraInfoNames=False\n'
         job_info += 'MachineName=%s\n' % platform.node()
         job_info += 'Plugin=MayaCmd\n'
-        job_info += 'OutputDirectory0=%s<RenderLayer>/%s/v%03d\n' % (output_path, task['task_name'], version)
-        job_info += 'OutputFilename0=%s\n' % output_file
+        l = 0
+        for layer in layers:
+            output_file = '%s_%s.####.%s' % (layer, base_name, ext)
+            job_info += 'OutputDirectory%i=%s%s/%s/v%03d\n' % (l, output_path, layer, task['task_name'], version)
+            job_info += 'OutputFilename%i=%s\n' % (l, output_file)
+            l += 1
         job_info += 'EventOptIns='
         job_info_file.write(job_info)
         job_info_file.close()
