@@ -923,58 +923,6 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
 
     def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
-        '''
-        I'll need a command line string with all the settings.  It will then be placed into something like this:
-        batch_string = str('mayabatch -file %s -command "%s"' % (self.file_path, str(command_string)))
-        I'll need to use list_deadline_pools to find the VRay or Arnold pool and
-        That will then be packed into a couple of Deadline documents, a JobInfo file and a PluginInfoFile that
-        will then be sent using something like this:
-        submitted = self.dl.Jobs.SubmitJobFiles(jobInfo, PluginInfo, idOnly=True)
-        That should be it.
-
-        Name=BE_4700_lookdev.main_v037 - BE_4700_shotCam1:shotCam1
-        UserName=matt
-        Region=none
-        Comment=Ramp Reveals 1075x858
-        Frames=1001-1185
-        Pool=vrscene
-        Priority=85
-        Blacklist=
-        MachineLimit=4
-        ScheduledStartDateTime=02/07/2018 11:44
-        OverrideTaskExtraInfoNames=False
-        MachineName=DESKTOP-FERDJRG
-        Plugin=MayaCmd
-        OutputDirectory0=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700/publish/renders/BE_4700_shotCam1_shotCam1
-        OutputFilename0=BE_4700_lookdev.main_v037.####.exr
-        EventOptIns=
-
-        NEED TO SETUP RENDER LAYER TEST FOR FULL FUNCTIONALITY!!!
-
-        Example Plugin
-
-        UseLegacyRenderLayers=0
-        Build=64bit
-        ProjectPath=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700
-        CommandLineOptions=
-        ImageWidth=1075
-        ImageHeight=858
-        OutputFilePath=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700/publish/renders/
-        OutputFilePrefix=<Camera>/BE_4700_lookdev.main_v037
-        Camera=BE_4700_shotCam1:shotCam1
-        Camera0=
-        Camera1=BE_4700_shotCam1:shotCam1
-        Camera2=BE_4700_shotCam2:shotCam1
-        Camera3=front
-        Camera4=persp2
-        Camera5=persp
-        Camera6=persp1
-        Camera7=side
-        Camera8=top
-        IgnoreError211=1
-        :return:
-        '''
-
         self.ui.build_progress.setValue(77)
         self.ui.status_label.setText('Collect Deadline Pools...')
         all_pools = self.list_deadline_pools()
@@ -1109,36 +1057,34 @@ class LazySiouxsie(QtGui.QWidget):
             slice_mult = (frame_range/2) / 360.00
             slice_frames = int(slice_mult * degree)
             slice_frame = 0
-            # try:
-            self.ui.build_progress.setValue(82)
-            self.ui.status_label.setText('Submitting the Job to Deadline...')
-            submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
-            print submitted
-            # Setup slice conditions here, to then suspend specific job tasks.
-            if submitted and degree != 0:
-                self.ui.build_progress.setValue(83)
-                self.ui.status_label.setText('Parsing Slices...')
-                job_id = submitted['_id']
-                tasks = self.dl.Tasks.GetJobTasks(job_id)
-                task_count = len(tasks)
-                task_percent = 12.0 / float(task_count)
-                percent = 84.0
-                task_list = []
-                for tsk in tasks['Tasks']:
-                    task_id = int(tsk['TaskID'])
-                    percent += task_percent
-                    if task_id != slice_frame:
-                        task_list.append(task_id)
-                    else:
-                        self.ui.build_progress.setValue(int(percent))
-                        self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
-                        slice_frame += slice_frames
-                if task_list:
-                    self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
-
-            # except Exception, e:
-            #     submitted = False
-            #     print 'FAILED! %s' % e
+            try:
+                self.ui.build_progress.setValue(82)
+                self.ui.status_label.setText('Submitting the Job to Deadline...')
+                submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+                # Setup slice conditions here, to then suspend specific job tasks.
+                if submitted and degree != 0:
+                    self.ui.build_progress.setValue(83)
+                    self.ui.status_label.setText('Parsing Slices...')
+                    job_id = submitted['_id']
+                    tasks = self.dl.Tasks.GetJobTasks(job_id)
+                    task_count = len(tasks)
+                    task_percent = 12.0 / float(task_count)
+                    percent = 84.0
+                    task_list = []
+                    for tsk in tasks['Tasks']:
+                        task_id = int(tsk['TaskID'])
+                        percent += task_percent
+                        if task_id != slice_frame:
+                            task_list.append(task_id)
+                        else:
+                            self.ui.build_progress.setValue(int(percent))
+                            self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+                            slice_frame += slice_frames
+                    if task_list:
+                        self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
+            except Exception, e:
+                submitted = False
+                print 'FAILED! %s' % e
             t += 1
 
     def list_deadline_pools(self):
