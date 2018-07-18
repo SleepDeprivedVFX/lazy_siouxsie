@@ -997,11 +997,6 @@ class LazySiouxsie(QtGui.QWidget):
         version = task['version']
         t = 0
         for layer in layers:
-            prefix = '%s/v%03d/%s' % (task['task_name'], version, base_name)
-            full_render_dir = output_path + prefix
-            if not os.path.exists(full_render_dir):
-                os.makedirs(full_render_dir)
-            # Path to Deadline Job Files
             job_path = os.environ['TEMP'] + '\\_job_submissions'
             if not os.path.exists(job_path):
                 os.mkdir(job_path)
@@ -1018,9 +1013,9 @@ class LazySiouxsie(QtGui.QWidget):
             Y = datetime.now().year
             d = '%s-%s-%s' % (D, M, Y)
             d_flat = str(d).replace('-', '')
-            ji_filename = '%s_%s%s%s%s%i_jobInfo.job' % (base_name, d_flat, h, m, s, t)
+            ji_filename = '%s_%s%s%s%s%s_jobInfo.job' % (base_name, d_flat, h, m, s, t)
             ji_filepath = job_path + '\\' + ji_filename
-            pi_filename = '%s_%s%s%s%s%i_pluginInfo.job' % (base_name, d_flat, h, m, s, t)
+            pi_filename = '%s_%s%s%s%s%s_pluginInfo.job' % (base_name, d_flat, h, m, s, t)
             pi_filepath = job_path + '\\' + pi_filename
             job_info_file = open(ji_filepath, 'w+')
             plugin_info_file = open(pi_filepath, 'w+')
@@ -1066,7 +1061,7 @@ class LazySiouxsie(QtGui.QWidget):
             job_info += 'Plugin=MayaCmd\n'
             output_file = '%s_%s.####.%s' % (layer, base_name, ext)
             output_directory = '%s%s/%s/v%03d' % (output_path, task['task_name'], layer, version)
-            output_directory = output_directory.replace('/', '\\')
+            # output_directory = output_directory.replace('/', '\\')
             job_info += 'OutputDirectory0=%s\n' % output_directory
             job_info += 'OutputFilename0=%s\n' % output_file
             job_info += 'EventOptIns='
@@ -1097,7 +1092,7 @@ class LazySiouxsie(QtGui.QWidget):
             plugin_info += 'ImageWidth=%s\n' % resolutionWidth
             plugin_info += 'ImageHeight=%s\n' % resolutionHeight
             plugin_info += 'OutputFilePath=%s\n' % output_path
-            plugin_info += 'OutputFilePrefix=%s\n' % prefix
+            plugin_info += 'OutputFilePrefix=\n'
             plugin_info += 'Camera=%s\n' % camera[0]
             plugin_info += 'Camera0=\nCamera1=%s\n' % camera[0]
             plugin_info += 'Camera2=front\nCamera3=persp\nCamera4=side\nCamera5=top\n'
@@ -1111,40 +1106,39 @@ class LazySiouxsie(QtGui.QWidget):
             degree_slice = self.ui.render_slices.currentText()
             degree = float(degree_slice)
             frame_range = float(end - start + 1)
-            slice_mult = frame_range / 360.00
+            slice_mult = (frame_range/2) / 360.00
             slice_frames = int(slice_mult * degree)
             slice_frame = 0
-            try:
-                self.ui.build_progress.setValue(82)
-                self.ui.status_label.setText('Submitting the Job to Deadline...')
-                submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+            # try:
+            self.ui.build_progress.setValue(82)
+            self.ui.status_label.setText('Submitting the Job to Deadline...')
+            submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+            print submitted
+            # Setup slice conditions here, to then suspend specific job tasks.
+            if submitted and degree != 0:
+                self.ui.build_progress.setValue(83)
+                self.ui.status_label.setText('Parsing Slices...')
+                job_id = submitted['_id']
+                tasks = self.dl.Tasks.GetJobTasks(job_id)
+                task_count = len(tasks)
+                task_percent = 12.0 / float(task_count)
+                percent = 84.0
+                task_list = []
+                for tsk in tasks['Tasks']:
+                    task_id = int(tsk['TaskID'])
+                    percent += task_percent
+                    if task_id != slice_frame:
+                        task_list.append(task_id)
+                    else:
+                        self.ui.build_progress.setValue(int(percent))
+                        self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+                        slice_frame += slice_frames
+                if task_list:
+                    self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
 
-                # Setup slice conditions here, to then suspend specific job tasks.
-                if submitted and degree != 0:
-                    self.ui.build_progress.setValue(83)
-                    self.ui.status_label.setText('Parsing Slices...')
-                    job_id = submitted['_id']
-                    tasks = self.dl.Tasks.GetJobTasks(job_id)
-                    task_count = len(tasks)
-                    task_percent = 12.0 / float(task_count)
-                    percent = 84.0
-                    task_list = []
-                    for task in tasks['Tasks']:
-                        task_id = int(task['TaskID'])
-                        percent += task_percent
-                        if task_id != slice_frame:
-                            self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
-                            task_list.append(task_id)
-                        else:
-                            self.ui.build_progress.setValue(int(percent))
-                            self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
-                            slice_frame += slice_frames
-                    if task_list:
-                        self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
-
-            except Exception, e:
-                submitted = False
-                print 'FAILED! %s' % e
+            # except Exception, e:
+            #     submitted = False
+            #     print 'FAILED! %s' % e
             t += 1
 
     def list_deadline_pools(self):
