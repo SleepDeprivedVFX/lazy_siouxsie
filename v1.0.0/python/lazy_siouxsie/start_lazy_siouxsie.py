@@ -632,29 +632,13 @@ class LazySiouxsie(QtGui.QWidget):
         # lights = list(lights)
 
         if lights:
-            # TODO: Eventually, I need to get this working. For now it is disabled, but will hide all the lights.
-
-            # render_layer = rs.createRenderLayer('Artist_Lights')
-            # collection_set = render_layer.createCollection('geo')
-            # collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
-            # light_collection = render_layer.createCollection('artist_lights')
-            # light_list = ''
-            # for light in lights:
-            #     light_list += '%s, ' % light
-            # light_collection.getSelector().setPattern(light_list)
-            # light_collection.setSelectorType('Lights')
-
-            # light_collection.getSelector().set
-            # light_collection.
             for light in lights:
+                light_relatives = cmds.listRelatives(light, ap=True)
                 cmds.select(light, r=True)
-                cmds.hide()
-            # rs.switchToLayer(render_layer)
-            # for light in lights:
-            # utils.createAbsoluteOverride(light, 'visibility')
-            #
-            # cmds.setAttr('visibility.attrValue', 1)
-            # cmds.select(light, r=True)
+                cmds.setAttr('%s.visibility' % light, 0)
+                if light_relatives:
+                    cmds.select(light_relatives, r=True)
+                    cmds.setAttr('%s.visibility' % light_relatives, 0)
 
         self.ui.build_progress.setValue(64)
         self.ui.status_label.setText('Collecting Turntable Geo...')
@@ -678,6 +662,23 @@ class LazySiouxsie(QtGui.QWidget):
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
+        if lights:
+            render_layer = rs.createRenderLayer('Artist_Lights')
+            collection_set = render_layer.createCollection('geo')
+            collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
+            light_collection = render_layer.createCollection('artist_lights')
+            light_list = ''
+            for light in lights:
+                light_list += '%s, ' % light
+            light_collection.getSelector().setPattern(light_list)
+            rs.switchToLayer(render_layer)
+            utils.createAbsoluteOverride(dome, 'visibility')
+            cmds.select(dome, r=True)
+            cmds.setAttr('visibility.attrValue', 0)
+            for light in lights:
+                utils.createAbsoluteOverride(light, 'visibility')
+                cmds.select(light, r=True)
+                cmds.setAttr('visibility.attrValue', 1)
         rs.switchToLayer(None)
         return layers
 
@@ -930,8 +931,6 @@ class LazySiouxsie(QtGui.QWidget):
 
         self.ui.build_progress.setValue(78)
         self.ui.status_label.setText('Setup Deadline Environments and Datetime...')
-        job_info = ''
-        plugin_info = ''
         file_name = cmds.file(q=True, sn=True)
         file_path = os.path.dirname(file_name)
         path_settings = self.sg.templates['maya_asset_work']
@@ -945,6 +944,10 @@ class LazySiouxsie(QtGui.QWidget):
         version = task['version']
         t = 0
         for layer in layers:
+            print layer
+            lyr = str(layer)
+            job_info = ''
+            plugin_info = ''
             job_path = os.environ['TEMP'] + '\\_job_submissions'
             if not os.path.exists(job_path):
                 os.mkdir(job_path)
@@ -987,7 +990,7 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(79)
             self.ui.status_label.setText('Create Job Info File...')
-            job_info += 'Name=%s - %s\n' % (base_name, layer)
+            job_info += 'Name=%s - %s\n' % (base_name, lyr)
             job_info += 'BatchName=%s\n' % base_name
             job_info += 'UserName=%s\n' % user_name
             job_info += 'Region=none\n'
@@ -1057,34 +1060,34 @@ class LazySiouxsie(QtGui.QWidget):
             slice_mult = (frame_range/2) / 360.00
             slice_frames = int(slice_mult * degree)
             slice_frame = 0
-            try:
-                self.ui.build_progress.setValue(82)
-                self.ui.status_label.setText('Submitting the Job to Deadline...')
-                submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
-                # Setup slice conditions here, to then suspend specific job tasks.
-                if submitted and degree != 0:
-                    self.ui.build_progress.setValue(83)
-                    self.ui.status_label.setText('Parsing Slices...')
-                    job_id = submitted['_id']
-                    tasks = self.dl.Tasks.GetJobTasks(job_id)
-                    task_count = len(tasks)
-                    task_percent = 12.0 / float(task_count)
-                    percent = 84.0
-                    task_list = []
-                    for tsk in tasks['Tasks']:
-                        task_id = int(tsk['TaskID'])
-                        percent += task_percent
-                        if task_id != slice_frame:
-                            task_list.append(task_id)
-                        else:
-                            self.ui.build_progress.setValue(int(percent))
-                            self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
-                            slice_frame += slice_frames
-                    if task_list:
-                        self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
-            except Exception, e:
-                submitted = False
-                print 'FAILED! %s' % e
+            # try:
+            #     self.ui.build_progress.setValue(82)
+            #     self.ui.status_label.setText('Submitting the Job to Deadline...')
+            #     submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+            #     # Setup slice conditions here, to then suspend specific job tasks.
+            #     if submitted and degree != 0:
+            #         self.ui.build_progress.setValue(83)
+            #         self.ui.status_label.setText('Parsing Slices...')
+            #         job_id = submitted['_id']
+            #         tasks = self.dl.Tasks.GetJobTasks(job_id)
+            #         task_count = len(tasks)
+            #         task_percent = 12.0 / float(task_count)
+            #         percent = 84.0
+            #         task_list = []
+            #         for tsk in tasks['Tasks']:
+            #             task_id = int(tsk['TaskID'])
+            #             percent += task_percent
+            #             if task_id != slice_frame:
+            #                 task_list.append(task_id)
+            #             else:
+            #                 self.ui.build_progress.setValue(int(percent))
+            #                 self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+            #                 slice_frame += slice_frames
+            #         if task_list:
+            #             self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
+            # except Exception, e:
+            #     submitted = False
+            #     print 'FAILED! %s' % e
             t += 1
 
     def list_deadline_pools(self):
