@@ -631,15 +631,6 @@ class LazySiouxsie(QtGui.QWidget):
         default_render_layer.setRenderable(False)
         # lights = list(lights)
 
-        if lights:
-            for light in lights:
-                light_relatives = cmds.listRelatives(light, ap=True)
-                cmds.select(light, r=True)
-                cmds.setAttr('%s.visibility' % light, 0)
-                if light_relatives:
-                    cmds.select(light_relatives, r=True)
-                    cmds.setAttr('%s.visibility' % light_relatives, 0)
-
         self.ui.build_progress.setValue(64)
         self.ui.status_label.setText('Collecting Turntable Geo...')
         chrome_balls = ''
@@ -662,6 +653,26 @@ class LazySiouxsie(QtGui.QWidget):
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
+
+                if lights:
+                    utils.createAbsoluteOverride(light_trans, 'visibility')
+                    cmds.select(light_trans, r=True)
+                    cmds.setAttr('visibility.attrValue', 1)
+                    for light in lights:
+                        # cmds.select(light, r=True)
+                        # cmds.setAttr('%s.visibility' % light, 0)
+                        utils.createAbsoluteOverride(light, 'visibility')
+                        cmds.select(light, r=True)
+                        cmds.setAttr('visibility.attrValue', 0)
+                        light_relatives = cmds.listRelatives(light, ap=True)
+                        if light_relatives:
+                            for light_rel in light_relatives:
+                                cmds.select(light_rel, r=True)
+                                cmds.setAttr('%s.visibility' % light_rel, 0)
+                                utils.createAbsoluteOverride(light_rel, 'visibility')
+                                cmds.select(light_rel, r=True)
+                                cmds.setAttr('visibility.attrValue', 0)
+
         if lights:
             render_layer = rs.createRenderLayer('Artist_Lights')
             collection_set = render_layer.createCollection('geo')
@@ -672,13 +683,19 @@ class LazySiouxsie(QtGui.QWidget):
                 light_list += '%s, ' % light
             light_collection.getSelector().setPattern(light_list)
             rs.switchToLayer(render_layer)
-            utils.createAbsoluteOverride(dome, 'visibility')
-            cmds.select(dome, r=True)
+            utils.createAbsoluteOverride(light_trans, 'visibility')
+            cmds.select(light_trans, r=True)
             cmds.setAttr('visibility.attrValue', 0)
             for light in lights:
                 utils.createAbsoluteOverride(light, 'visibility')
                 cmds.select(light, r=True)
                 cmds.setAttr('visibility.attrValue', 1)
+                light_relatives = cmds.listRelatives(light, ap=True)
+                if light_relatives:
+                    for light_rel in light_relatives:
+                        utils.createAbsoluteOverride(light_rel, 'visibility')
+                        cmds.select(light_rel, r=True)
+                        cmds.setAttr('visibility.attrValue', 1)
         rs.switchToLayer(None)
         return layers
 
