@@ -196,12 +196,26 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(8)
             self.ui.status_label.setText('Getting HDRI Selections...')
             selected_hdri = self.get_hdri_files()
-            # Setup the camera bit
+
+            # Select and group the set
             self.ui.build_progress.setValue(10)
+            self.ui.status_label.setText('Selecting scene geometry...')
+            geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+            cmds.select(geo, r=True)
+            z = 30
+            while z < 100:
+                cmds.pickWalk(d='up')
+                z += 1
+            self.ui.build_progress.setValue(12)
+            self.ui.status_label.setText('Grouping the geometry...')
+            group = cmds.group(n='_Turntable_Set_Prep')
+
+            # Setup the camera bit
+            self.ui.build_progress.setValue(14)
             self.ui.status_label.setText('Building the Turntable Camera...')
             start = self.ui.startFrame.value()
             end = self.ui.endFrame.value()
-            camera_data = self.build_camera(start=start, end=end)
+            camera_data = self.build_camera(start=start, end=end, group=group)
             camera = camera_data[0]
             center = camera_data[1]
             bb = camera_data[2]
@@ -232,12 +246,13 @@ class LazySiouxsie(QtGui.QWidget):
             if use_scene_lighting:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Get Scene Lights...')
-                get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group)
+                self.animate_dome(trans=get_scene_lights[1], start=end, end=extended_end)
             else:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Ignoring scene lights...')
                 # Once this is rewritten, this should = None
-                get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
+                get_scene_lights = None
 
             self.ui.build_progress.setValue(40)
             self.ui.status_label.setText('Build HDRI dome...')
@@ -316,8 +331,8 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(62)
             self.ui.status_label.setText('Begin Layers Setup...')
             layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane,
-                                              light_trans=light_trans, hdri_list=selected_hdri, lights=get_scene_lights,
-                                              balls=spheres)
+                                              light_trans=light_trans, hdri_list=selected_hdri,
+                                              lights=get_scene_lights[0], light_grp=get_scene_lights[1],  balls=spheres)
 
             self.ui.build_progress.setValue(68)
             self.ui.status_label.setText('Setting render settings...')
@@ -622,7 +637,7 @@ class LazySiouxsie(QtGui.QWidget):
         return hdri_files
 
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
-                            lights=[], balls=[]):
+                            lights=[], light_grp=None, balls=[]):
         layers = []
         self.ui.build_progress.setValue(63)
         self.ui.status_label.setText('Setting up render layers...')
@@ -657,21 +672,26 @@ class LazySiouxsie(QtGui.QWidget):
                 if lights:
                     utils.createAbsoluteOverride(light_trans, 'visibility')
                     cmds.select(light_trans, r=True)
-                    cmds.setAttr('visibility.attrValue', 1)
-                    for light in lights:
-                        # cmds.select(light, r=True)
-                        # cmds.setAttr('%s.visibility' % light, 0)
-                        utils.createAbsoluteOverride(light, 'visibility')
-                        cmds.select(light, r=True)
-                        cmds.setAttr('visibility.attrValue', 0)
-                        light_relatives = cmds.listRelatives(light, ap=True)
-                        if light_relatives:
-                            for light_rel in light_relatives:
-                                cmds.select(light_rel, r=True)
-                                cmds.setAttr('%s.visibility' % light_rel, 0)
-                                utils.createAbsoluteOverride(light_rel, 'visibility')
-                                cmds.select(light_rel, r=True)
-                                cmds.setAttr('visibility.attrValue', 0)
+                    cmds.setAttr('%s.visibility' % light_trans, 1)
+                    utils.createAbsoluteOverride(light_grp, 'visibility')
+                    cmds.select(light_grp, r=True)
+                    cmds.setAttr('%s.visibility' % light_grp, 0)
+                    # for light in lights:
+                    #     # cmds.select(light, r=True)
+                    #     # cmds.setAttr('%s.visibility' % light, 0)
+                    #     utils.createAbsoluteOverride(light, 'visibility')
+                    #     ovrrd = cmds.ls(sl=True)
+                    #     print ovrrd
+                    #     cmds.select(light, r=True)
+                    #     cmds.setAttr('visibility.attrValue', 0)
+                    #     light_relatives = cmds.listRelatives(light, ap=True)
+                    #     if light_relatives:
+                    #         for light_rel in light_relatives:
+                    #             utils.createAbsoluteOverride(light_rel, 'visibility')
+                    #             lgtovrd = cmds.ls(sl=True)
+                    #             print lgtovrd
+                    #             cmds.select(light_rel, r=True)
+                    #             cmds.setAttr('visibility.attrValue', 0)
 
         if lights:
             render_layer = rs.createRenderLayer('Artist_Lights')
@@ -684,22 +704,29 @@ class LazySiouxsie(QtGui.QWidget):
             light_collection.getSelector().setPattern(light_list)
             rs.switchToLayer(render_layer)
             utils.createAbsoluteOverride(light_trans, 'visibility')
-            cmds.select(light_trans, r=True)
-            cmds.setAttr('visibility.attrValue', 0)
-            for light in lights:
-                utils.createAbsoluteOverride(light, 'visibility')
-                cmds.select(light, r=True)
-                cmds.setAttr('visibility.attrValue', 1)
-                light_relatives = cmds.listRelatives(light, ap=True)
-                if light_relatives:
-                    for light_rel in light_relatives:
-                        utils.createAbsoluteOverride(light_rel, 'visibility')
-                        cmds.select(light_rel, r=True)
-                        cmds.setAttr('visibility.attrValue', 1)
+            cmds.setAttr('%s.visibility' % light_trans, 0)
+            utils.createAbsoluteOverride(light_grp, 'visibility')
+            cmds.select(light_grp, r=True)
+            cmds.setAttr('%s.visibility' % light_grp, 1)
+            # for light in lights:
+            #     utils.createAbsoluteOverride(light, 'visibility')
+            #     ovrd3 = cmds.ls(sl=True)
+            #     print ovrd3
+            #     cmds.select(light, r=True)
+            #     cmds.setAttr('visibility.attrValue', 1)
+            #     light_relatives = cmds.listRelatives(light, ap=True)
+            #     if light_relatives:
+            #         for light_rel in light_relatives:
+            #             utils.createAbsoluteOverride(light_rel, 'visibility')
+            #             ovrd4 = cmds.ls(sl=True)
+            #             print ovrd4
+            #             cmds.select(light_rel, r=True)
+            #             cmds.setAttr('visibility.attrValue', 1)
         rs.switchToLayer(None)
         return layers
 
-    def get_scene_lights(self, renderer=None):
+    def get_scene_lights(self, renderer=None, group=None):
+        print 'GROUP=%s' % group
         lights = []
         if renderer == 'arnold':
             self.ui.build_progress.setValue(38)
@@ -711,7 +738,7 @@ class LazySiouxsie(QtGui.QWidget):
                 for t in type_list:
                     lights.append(t)
         elif renderer == 'vray':
-            # Figure out the vray code...
+            # TODO: Figure out the vray code...
             pass
         elif renderer == 'redshift':
             # Figure out RedShift code
@@ -726,7 +753,28 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.status_label.setText('getting Maya Lights...')
         for light in cmds.ls(lt=True):
             lights.append(light)
-        return lights
+
+        light_roots = []
+
+        for light in lights:
+            cmds.select(light, r=True)
+            i = 0
+            while i < 100:
+                cmds.pickWalk(d='up')
+                i += 1
+            if cmds.ls(sl=True)[0] not in light_roots:
+                light_roots.append(cmds.ls(sl=True)[0])
+        print 'light_roots: %s' % light_roots
+        for root in light_roots:
+            if root == group:
+                print root
+                light_roots.remove(root)
+        cmds.select(light_roots, r=True)
+        check_select = cmds.ls(sl=True)
+        print 'check_select: %s' % check_select
+        light_group = cmds.group(n='_turntable_light_group')
+        print 'light_group: %s' % light_group
+        return [lights, light_group]
 
     def browse(self):
         finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
@@ -823,21 +871,9 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.status_label.setText('New Filename: %s' % next_file)
         return next_file
 
-    def build_camera(self, start=1, end=120):
-        # Select and group the set
-        self.ui.build_progress.setValue(12)
-        self.ui.status_label.setText('Selecting scene geometry...')
-        geo = cmds.ls(type=['mesh', 'nurbsSurface'])
-        cmds.select(geo, r=True)
-        z = 30
-        while z < 100:
-            cmds.pickWalk(d='up')
-            z += 1
-        self.ui.build_progress.setValue(14)
-        self.ui.status_label.setText('Grouping the geometry...')
-        cmds.group(n='_Turntable_Set_Prep')
+    def build_camera(self, start=1, end=120, group=None):
         # Get the set/scene size from the bounding box
-        cmds.select('_Turntable_Set_Prep')
+        cmds.select(group, r=True)
         self.ui.build_progress.setValue(16)
         self.ui.status_label.setText('Getting scene center point...')
         scene_bb = cmds.xform(q=True, bb=True)

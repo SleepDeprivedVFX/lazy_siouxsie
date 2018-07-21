@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Mon Jul 16 01:20:22 2018
+# Created: Fri Jul 20 01:03:00 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -239,9 +239,9 @@ class Ui_lazySiouxsie(object):
         self.horizontalLayout_9 = QtGui.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.scene_lights = QtGui.QCheckBox(lazySiouxsie)
-        self.scene_lights.setEnabled(False)
+        self.scene_lights.setEnabled(True)
         self.scene_lights.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.scene_lights.setChecked(False)
+        self.scene_lights.setChecked(True)
         self.scene_lights.setObjectName("scene_lights")
         self.horizontalLayout_9.addWidget(self.scene_lights)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
