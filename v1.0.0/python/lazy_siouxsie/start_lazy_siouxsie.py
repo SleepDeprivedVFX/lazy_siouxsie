@@ -697,28 +697,17 @@ class LazySiouxsie(QtGui.QWidget):
         return layers
 
     def get_scene_lights(self, renderer=None, group=None):
-        print 'GROUP=%s' % group
         lights = []
-        if renderer == 'arnold':
-            self.ui.build_progress.setValue(38)
-            self.ui.status_label.setText('Getting Arnold Lights...')
-            light_types = ['aiAreaLight', 'aiSkyDomeLight', 'aiMeshLight', 'aiPhotometricLight', 'aiLightPortal',
-                           'aiPhysicalSky']
-            for light in light_types:
-                type_list = cmds.ls(type=light)
-                for t in type_list:
-                    lights.append(t)
-        elif renderer == 'vray':
-            # TODO: Figure out the vray code...
-            pass
-        elif renderer == 'redshift':
-            # Figure out RedShift code
-            pass
-        elif renderer == 'renderman':
-            # Figure out RedShift code
-            pass
-        elif renderer == 'mayasoftware':
-            pass
+        self.ui.build_progress.setValue(38)
+        self.ui.status_label.setText('Getting Lights...')
+        light_types = ['aiAreaLight', 'aiSkyDomeLight', 'aiMeshLight', 'aiPhotometricLight', 'aiLightPortal',
+                       'aiPhysicalSky', 'VRayGeoSun', 'VRaySunShape', 'VRaySunTarget', 'VRayLightIESShape',
+                       'VRayLightRectShape', 'VRayLightDomeShape', 'VRayLightSphereShape']
+
+        for light in light_types:
+            type_list = cmds.ls(type=light)
+            for t in type_list:
+                lights.append(t)
 
         self.ui.build_progress.setValue(39)
         self.ui.status_label.setText('getting Maya Lights...')
@@ -735,16 +724,12 @@ class LazySiouxsie(QtGui.QWidget):
                 i += 1
             if cmds.ls(sl=True)[0] not in light_roots:
                 light_roots.append(cmds.ls(sl=True)[0])
-        print 'light_roots: %s' % light_roots
         for root in light_roots:
             if root == group:
                 print root
                 light_roots.remove(root)
         cmds.select(light_roots, r=True)
-        check_select = cmds.ls(sl=True)
-        print 'check_select: %s' % check_select
         light_group = cmds.group(n='_turntable_light_group')
-        print 'light_group: %s' % light_group
         return [lights, light_group]
 
     def browse(self):
