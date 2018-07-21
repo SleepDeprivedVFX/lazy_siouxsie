@@ -105,6 +105,9 @@ class LazySiouxsie(QtGui.QWidget):
             'VRayLightSphereShape'
         ]
 
+        # Scene Selection
+        self.scene_selection = cmds.ls(sl=True)
+
         # now load in the UI that was created in the UI designer
         self.ui = Ui_lazySiouxsie()
         self.ui.setupUi(self)
@@ -203,14 +206,18 @@ class LazySiouxsie(QtGui.QWidget):
     def build_turn_table(self):
         # List tasks
         next_file = self.find_turntable_task()
+        select_type = self.ui.entire_scene.isChecked()
         if next_file:
             self.ui.build_progress.setValue(1)
             self.ui.status_label.setText('Saving working file...')
             cmds.file(s=True)
             self.ui.build_progress.setValue(5)
             self.ui.status_label.setText('Saving Turntable file...')
-            cmds.file(rn=next_file)
-            cmds.file(s=True, type='mayaBinary')
+            if select_type:
+                cmds.file(rn=next_file)
+                cmds.file(s=True, type='mayaBinary')
+            else:
+                cmds.file()
             self.ui.build_progress.setValue(8)
             self.ui.status_label.setText('Getting HDRI Selections...')
             selected_hdri = self.get_hdri_files()
@@ -218,7 +225,10 @@ class LazySiouxsie(QtGui.QWidget):
             # Select and group the set
             self.ui.build_progress.setValue(10)
             self.ui.status_label.setText('Selecting scene geometry...')
-            geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+            if select_type:
+                geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+            else:
+                geo = self.scene_selection
             cmds.select(geo, r=True)
             z = 1
             while z < 100:

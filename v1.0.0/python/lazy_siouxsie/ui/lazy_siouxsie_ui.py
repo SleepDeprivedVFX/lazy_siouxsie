@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Fri Jul 20 01:03:00 2018
+# Created: Sat Jul 21 12:05:39 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from sgtk.platform.qt import QtCore, QtGui
 class Ui_lazySiouxsie(object):
     def setupUi(self, lazySiouxsie):
         lazySiouxsie.setObjectName("lazySiouxsie")
-        lazySiouxsie.resize(557, 680)
+        lazySiouxsie.resize(557, 714)
         self.verticalLayout_2 = QtGui.QVBoxLayout(lazySiouxsie)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.title = QtGui.QLabel(lazySiouxsie)
@@ -259,6 +259,18 @@ class Ui_lazySiouxsie(object):
         self.chrome_balls.setObjectName("chrome_balls")
         self.horizontalLayout_9.addWidget(self.chrome_balls)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+        self.horizontalLayout_12 = QtGui.QHBoxLayout()
+        self.horizontalLayout_12.setObjectName("horizontalLayout_12")
+        self.entire_scene = QtGui.QRadioButton(lazySiouxsie)
+        self.entire_scene.setChecked(True)
+        self.entire_scene.setObjectName("entire_scene")
+        self.horizontalLayout_12.addWidget(self.entire_scene)
+        self.geo_selection = QtGui.QRadioButton(lazySiouxsie)
+        self.geo_selection.setObjectName("geo_selection")
+        self.horizontalLayout_12.addWidget(self.geo_selection)
+        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_12.addItem(spacerItem7)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_12)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.build_progress = QtGui.QProgressBar(lazySiouxsie)
@@ -281,8 +293,8 @@ class Ui_lazySiouxsie(object):
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem7)
+        spacerItem8 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(spacerItem8)
         self.cancel_btn = QtGui.QPushButton(lazySiouxsie)
         self.cancel_btn.setObjectName("cancel_btn")
         self.horizontalLayout_4.addWidget(self.cancel_btn)
@@ -464,6 +476,8 @@ class Ui_lazySiouxsie(object):
         self.chrome_balls.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "Automatically generate Chrome and 50% Gray Spheres", None))
         self.chrome_balls.setWhatsThis(QtGui.QApplication.translate("lazySiouxsie", "Automatically generate Chrome and 50% Gray Spheres", None))
         self.chrome_balls.setText(QtGui.QApplication.translate("lazySiouxsie", "Auto Chrome Balls", None))
+        self.entire_scene.setText(QtGui.QApplication.translate("lazySiouxsie", "Entire Scene", None))
+        self.geo_selection.setText(QtGui.QApplication.translate("lazySiouxsie", "Geometry Selection", None))
         self.status_label.setText(QtGui.QApplication.translate("lazySiouxsie", "Ready...", None))
         self.cancel_btn.setText(QtGui.QApplication.translate("lazySiouxsie", "Cancel", None))
         self.spin_btn.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "Create the Turnable file and submit it.", None))
