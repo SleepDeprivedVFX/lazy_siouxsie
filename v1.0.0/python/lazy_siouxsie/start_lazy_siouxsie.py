@@ -246,7 +246,7 @@ class LazySiouxsie(QtGui.QWidget):
             if use_scene_lighting:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Get Scene Lights...')
-                get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group)
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group, center=center)
                 self.animate_dome(trans=get_scene_lights[1], start=end, end=extended_end)
             else:
                 self.ui.build_progress.setValue(37)
@@ -696,7 +696,7 @@ class LazySiouxsie(QtGui.QWidget):
         rs.switchToLayer(None)
         return layers
 
-    def get_scene_lights(self, renderer=None, group=None):
+    def get_scene_lights(self, renderer=None, group=None, center=None):
         lights = []
         self.ui.build_progress.setValue(38)
         self.ui.status_label.setText('Getting Lights...')
@@ -730,6 +730,9 @@ class LazySiouxsie(QtGui.QWidget):
                 light_roots.remove(root)
         cmds.select(light_roots, r=True)
         light_group = cmds.group(n='_turntable_light_group')
+        if center:
+            cmds.select(light_group, r=True)
+            cmds.xform(piv=center, ws=True)
         return [lights, light_group]
 
     def browse(self):
