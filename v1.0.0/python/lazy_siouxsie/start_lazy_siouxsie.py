@@ -676,22 +676,6 @@ class LazySiouxsie(QtGui.QWidget):
                     utils.createAbsoluteOverride(light_grp, 'visibility')
                     cmds.select(light_grp, r=True)
                     cmds.setAttr('%s.visibility' % light_grp, 0)
-                    # for light in lights:
-                    #     # cmds.select(light, r=True)
-                    #     # cmds.setAttr('%s.visibility' % light, 0)
-                    #     utils.createAbsoluteOverride(light, 'visibility')
-                    #     ovrrd = cmds.ls(sl=True)
-                    #     print ovrrd
-                    #     cmds.select(light, r=True)
-                    #     cmds.setAttr('visibility.attrValue', 0)
-                    #     light_relatives = cmds.listRelatives(light, ap=True)
-                    #     if light_relatives:
-                    #         for light_rel in light_relatives:
-                    #             utils.createAbsoluteOverride(light_rel, 'visibility')
-                    #             lgtovrd = cmds.ls(sl=True)
-                    #             print lgtovrd
-                    #             cmds.select(light_rel, r=True)
-                    #             cmds.setAttr('visibility.attrValue', 0)
 
         if lights:
             render_layer = rs.createRenderLayer('Artist_Lights')
@@ -708,20 +692,7 @@ class LazySiouxsie(QtGui.QWidget):
             utils.createAbsoluteOverride(light_grp, 'visibility')
             cmds.select(light_grp, r=True)
             cmds.setAttr('%s.visibility' % light_grp, 1)
-            # for light in lights:
-            #     utils.createAbsoluteOverride(light, 'visibility')
-            #     ovrd3 = cmds.ls(sl=True)
-            #     print ovrd3
-            #     cmds.select(light, r=True)
-            #     cmds.setAttr('visibility.attrValue', 1)
-            #     light_relatives = cmds.listRelatives(light, ap=True)
-            #     if light_relatives:
-            #         for light_rel in light_relatives:
-            #             utils.createAbsoluteOverride(light_rel, 'visibility')
-            #             ovrd4 = cmds.ls(sl=True)
-            #             print ovrd4
-            #             cmds.select(light_rel, r=True)
-            #             cmds.setAttr('visibility.attrValue', 1)
+
         rs.switchToLayer(None)
         return layers
 
@@ -1113,34 +1084,34 @@ class LazySiouxsie(QtGui.QWidget):
             slice_mult = (frame_range/2) / 360.00
             slice_frames = int(slice_mult * degree)
             slice_frame = 0
-            # try:
-            #     self.ui.build_progress.setValue(82)
-            #     self.ui.status_label.setText('Submitting the Job to Deadline...')
-            #     submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
-            #     # Setup slice conditions here, to then suspend specific job tasks.
-            #     if submitted and degree != 0:
-            #         self.ui.build_progress.setValue(83)
-            #         self.ui.status_label.setText('Parsing Slices...')
-            #         job_id = submitted['_id']
-            #         tasks = self.dl.Tasks.GetJobTasks(job_id)
-            #         task_count = len(tasks)
-            #         task_percent = 12.0 / float(task_count)
-            #         percent = 84.0
-            #         task_list = []
-            #         for tsk in tasks['Tasks']:
-            #             task_id = int(tsk['TaskID'])
-            #             percent += task_percent
-            #             if task_id != slice_frame:
-            #                 task_list.append(task_id)
-            #             else:
-            #                 self.ui.build_progress.setValue(int(percent))
-            #                 self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
-            #                 slice_frame += slice_frames
-            #         if task_list:
-            #             self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
-            # except Exception, e:
-            #     submitted = False
-            #     print 'FAILED! %s' % e
+            try:
+                self.ui.build_progress.setValue(82)
+                self.ui.status_label.setText('Submitting the Job to Deadline...')
+                submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+                # Setup slice conditions here, to then suspend specific job tasks.
+                if submitted and degree != 0:
+                    self.ui.build_progress.setValue(83)
+                    self.ui.status_label.setText('Parsing Slices...')
+                    job_id = submitted['_id']
+                    tasks = self.dl.Tasks.GetJobTasks(job_id)
+                    task_count = len(tasks)
+                    task_percent = 12.0 / float(task_count)
+                    percent = 84.0
+                    task_list = []
+                    for tsk in tasks['Tasks']:
+                        task_id = int(tsk['TaskID'])
+                        percent += task_percent
+                        if task_id != slice_frame:
+                            task_list.append(task_id)
+                        else:
+                            self.ui.build_progress.setValue(int(percent))
+                            self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+                            slice_frame += slice_frames
+                    if task_list:
+                        self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
+            except Exception, e:
+                submitted = False
+                print 'FAILED! %s' % e
             t += 1
 
     def list_deadline_pools(self):
