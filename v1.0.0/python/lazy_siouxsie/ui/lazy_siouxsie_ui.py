@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\sleep\OneDrive\Documents\shotgun\mastertemplate\install\manual\tk-lazy_siouxsie\v1.0.0\python\lazy_siouxsie\ui\lazy_siouxsie_ui.ui'
 #
-# Created: Fri Jul 20 01:03:00 2018
+# Created: Sat Jul 21 13:51:36 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -259,6 +259,11 @@ class Ui_lazySiouxsie(object):
         self.chrome_balls.setObjectName("chrome_balls")
         self.horizontalLayout_9.addWidget(self.chrome_balls)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+        self.submit_to_deadline = QtGui.QCheckBox(lazySiouxsie)
+        self.submit_to_deadline.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.submit_to_deadline.setChecked(True)
+        self.submit_to_deadline.setObjectName("submit_to_deadline")
+        self.verticalLayout_2.addWidget(self.submit_to_deadline)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.build_progress = QtGui.QProgressBar(lazySiouxsie)
@@ -464,6 +469,7 @@ class Ui_lazySiouxsie(object):
         self.chrome_balls.setStatusTip(QtGui.QApplication.translate("lazySiouxsie", "Automatically generate Chrome and 50% Gray Spheres", None))
         self.chrome_balls.setWhatsThis(QtGui.QApplication.translate("lazySiouxsie", "Automatically generate Chrome and 50% Gray Spheres", None))
         self.chrome_balls.setText(QtGui.QApplication.translate("lazySiouxsie", "Auto Chrome Balls", None))
+        self.submit_to_deadline.setText(QtGui.QApplication.translate("lazySiouxsie", "Submit to Deadline", None))
         self.status_label.setText(QtGui.QApplication.translate("lazySiouxsie", "Ready...", None))
         self.cancel_btn.setText(QtGui.QApplication.translate("lazySiouxsie", "Cancel", None))
         self.spin_btn.setToolTip(QtGui.QApplication.translate("lazySiouxsie", "Create the Turnable file and submit it.", None))

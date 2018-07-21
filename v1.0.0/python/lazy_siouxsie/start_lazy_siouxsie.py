@@ -358,11 +358,12 @@ class LazySiouxsie(QtGui.QWidget):
             self.setup_rendering_engine(renderer=rendering_engine, render_format=self.render_format,
                                         task=self.turntable_task, filename=next_file, cam=camera)
             # Send to the farm.
-
-            self.ui.build_progress.setValue(76)
-            self.ui.status_label.setText('Creating Deadline Job...')
-            self.submit_to_deadline(start=start, end=extended_end, renderer=rendering_engine, camera=camera,
-                                    layers=layers)
+            send_to_deadline = self.ui.submit_to_deadline.isChecked()
+            if send_to_deadline:
+                self.ui.build_progress.setValue(76)
+                self.ui.status_label.setText('Creating Deadline Job...')
+                self.submit_to_deadline(start=start, end=extended_end, renderer=rendering_engine, camera=camera,
+                                        layers=layers)
 
             # Finalizing
             self.ui.build_progress.setValue(96)
@@ -1115,34 +1116,34 @@ class LazySiouxsie(QtGui.QWidget):
             slice_mult = (frame_range/2) / 360.00
             slice_frames = int(slice_mult * degree)
             slice_frame = 0
-            # try:
-            #     self.ui.build_progress.setValue(82)
-            #     self.ui.status_label.setText('Submitting the Job to Deadline...')
-            #     submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
-            #     # Setup slice conditions here, to then suspend specific job tasks.
-            #     if submitted and degree != 0:
-            #         self.ui.build_progress.setValue(83)
-            #         self.ui.status_label.setText('Parsing Slices...')
-            #         job_id = submitted['_id']
-            #         tasks = self.dl.Tasks.GetJobTasks(job_id)
-            #         task_count = len(tasks)
-            #         task_percent = 12.0 / float(task_count)
-            #         percent = 84.0
-            #         task_list = []
-            #         for tsk in tasks['Tasks']:
-            #             task_id = int(tsk['TaskID'])
-            #             percent += task_percent
-            #             if task_id != slice_frame:
-            #                 task_list.append(task_id)
-            #             else:
-            #                 self.ui.build_progress.setValue(int(percent))
-            #                 self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
-            #                 slice_frame += slice_frames
-            #         if task_list:
-            #             self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
-            # except Exception, e:
-            #     submitted = False
-            #     print 'FAILED! %s' % e
+            try:
+                self.ui.build_progress.setValue(82)
+                self.ui.status_label.setText('Submitting the Job to Deadline...')
+                submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+                # Setup slice conditions here, to then suspend specific job tasks.
+                if submitted and degree != 0:
+                    self.ui.build_progress.setValue(83)
+                    self.ui.status_label.setText('Parsing Slices...')
+                    job_id = submitted['_id']
+                    tasks = self.dl.Tasks.GetJobTasks(job_id)
+                    task_count = len(tasks)
+                    task_percent = 12.0 / float(task_count)
+                    percent = 84.0
+                    task_list = []
+                    for tsk in tasks['Tasks']:
+                        task_id = int(tsk['TaskID'])
+                        percent += task_percent
+                        if task_id != slice_frame:
+                            task_list.append(task_id)
+                        else:
+                            self.ui.build_progress.setValue(int(percent))
+                            self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+                            slice_frame += slice_frames
+                    if task_list:
+                        self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
+            except Exception, e:
+                submitted = False
+                print 'FAILED! %s' % e
             t += 1
 
     def list_deadline_pools(self):
