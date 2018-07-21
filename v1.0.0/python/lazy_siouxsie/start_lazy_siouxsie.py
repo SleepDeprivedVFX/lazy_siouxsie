@@ -202,7 +202,7 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.status_label.setText('Selecting scene geometry...')
             geo = cmds.ls(type=['mesh', 'nurbsSurface'])
             cmds.select(geo, r=True)
-            z = 30
+            z = 1
             while z < 100:
                 cmds.pickWalk(d='up')
                 z += 1
@@ -884,7 +884,7 @@ class LazySiouxsie(QtGui.QWidget):
         width = (x_max - x_min)
         depth = (z_max - z_min)
         if height > width and height > depth:
-            max_hypotenuse *= aspect_ratio
+            max_hypotenuse *= (aspect_ratio * 0.75)
         half_width = max_hypotenuse / 2
         # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view
         # must be calculated from that
