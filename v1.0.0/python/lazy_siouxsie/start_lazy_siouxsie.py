@@ -89,10 +89,27 @@ class LazySiouxsie(QtGui.QWidget):
             'vrst': 'vrst',
             'exr(deep)': 'exr(deep)'
         }
+        self.light_types = [
+            'aiAreaLight',
+            'aiSkyDomeLight',
+            'aiMeshLight',
+            'aiPhotometricLight',
+            'aiLightPortal',
+            'aiPhysicalSky',
+            'VRayGeoSun',
+            'VRaySunShape',
+            'VRaySunTarget',
+            'VRayLightIESShape',
+            'VRayLightRectShape',
+            'VRayLightDomeShape',
+            'VRayLightSphereShape'
+        ]
 
         # now load in the UI that was created in the UI designer
         self.ui = Ui_lazySiouxsie()
         self.ui.setupUi(self)
+
+        self.has_lights = self.check_scene_lights()
 
         # most of the useful accessors are available through the Application class instance
         # it is often handy to keep a reference to this. You can get it via the following method:
@@ -171,6 +188,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.startFrame.valueChanged.connect(self.set_frames)
         self.ui.endFrame.valueChanged.connect(self.set_frames)
         self.ui.render_format.setCurrentText(self.render_format)
+        self.ui.scene_lights.clicked.connect(self.check_scene_lights)
 
     def set_frames(self):
         start = self.ui.startFrame.value()
@@ -243,7 +261,7 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(36)
             self.ui.status_label.setText('Get scene lighting requirements...')
             use_scene_lighting = self.ui.scene_lights.isChecked()
-            if use_scene_lighting:
+            if use_scene_lighting and self.has_lights:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Get Scene Lights...')
                 get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group, center=center)
@@ -252,7 +270,7 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Ignoring scene lights...')
                 # Once this is rewritten, this should = None
-                get_scene_lights = None
+                get_scene_lights = [[], '']
 
             self.ui.build_progress.setValue(40)
             self.ui.status_label.setText('Build HDRI dome...')
@@ -696,13 +714,31 @@ class LazySiouxsie(QtGui.QWidget):
         rs.switchToLayer(None)
         return layers
 
+    def check_scene_lights(self):
+        lights = []
+        light_types = self.light_types
+        for light in light_types:
+            type_list = cmds.ls(type=light)
+            for t in type_list:
+                lights.append(t)
+        maya_light_types = cmds.ls(lights=True)
+        for light in maya_light_types:
+            lights.append(light)
+        if lights:
+            self.ui.scene_lights.setChecked(True)
+            self.ui.status_label.setText('Lights in the Scene!')
+            self.ui.build_progress.setValue(0)
+            return True
+        self.ui.scene_lights.setChecked(False)
+        self.ui.status_label.setText('No lights found in scene')
+        self.ui.build_progress.setValue(0)
+        return False
+
     def get_scene_lights(self, renderer=None, group=None, center=None):
         lights = []
         self.ui.build_progress.setValue(38)
         self.ui.status_label.setText('Getting Lights...')
-        light_types = ['aiAreaLight', 'aiSkyDomeLight', 'aiMeshLight', 'aiPhotometricLight', 'aiLightPortal',
-                       'aiPhysicalSky', 'VRayGeoSun', 'VRaySunShape', 'VRaySunTarget', 'VRayLightIESShape',
-                       'VRayLightRectShape', 'VRayLightDomeShape', 'VRayLightSphereShape']
+        light_types = self.light_types
 
         for light in light_types:
             type_list = cmds.ls(type=light)
@@ -715,22 +751,24 @@ class LazySiouxsie(QtGui.QWidget):
             lights.append(light)
 
         light_roots = []
-
-        for light in lights:
-            cmds.select(light, r=True)
-            i = 0
-            while i < 100:
-                cmds.pickWalk(d='up')
-                i += 1
-            if cmds.ls(sl=True)[0] not in light_roots:
-                light_roots.append(cmds.ls(sl=True)[0])
-        for root in light_roots:
-            if root == group:
-                print root
-                light_roots.remove(root)
-        cmds.select(light_roots, r=True)
-        light_group = cmds.group(n='_turntable_light_group')
-        if center:
+        if lights:
+            for light in lights:
+                cmds.select(light, r=True)
+                i = 0
+                while i < 100:
+                    cmds.pickWalk(d='up')
+                    i += 1
+                if cmds.ls(sl=True)[0] not in light_roots:
+                    light_roots.append(cmds.ls(sl=True)[0])
+            for root in light_roots:
+                if root == group:
+                    light_roots.remove(root)
+            cmds.select(light_roots, r=True)
+        if lights:
+            light_group = cmds.group(n='_turntable_light_group')
+        else:
+            light_group = None
+        if center and light_group:
             cmds.select(light_group, r=True)
             cmds.xform(piv=center, ws=True)
         return [lights, light_group]
@@ -956,7 +994,6 @@ class LazySiouxsie(QtGui.QWidget):
         version = task['version']
         t = 0
         for layer in layers:
-            print layer
             lyr = str(layer)
             job_info = ''
             plugin_info = ''
