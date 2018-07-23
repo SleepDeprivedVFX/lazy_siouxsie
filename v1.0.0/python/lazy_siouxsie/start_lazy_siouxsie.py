@@ -764,6 +764,7 @@ class LazySiouxsie(QtGui.QWidget):
         if lights:
             self.ui.scene_lights.setChecked(True)
             self.ui.status_label.setText('Lights in the Scene!')
+            logger.info('This scene has lights in it.  Use Scene Lights has been turned on.')
             self.scene_lights = lights
             self.ui.build_progress.setValue(0)
             return True
@@ -773,6 +774,7 @@ class LazySiouxsie(QtGui.QWidget):
         return False
 
     def get_scene_lights(self, renderer=None, group=None, center=None):
+        logger.info('Begin packing scene lights.')
         lights = []
         self.ui.build_progress.setValue(38)
         self.ui.status_label.setText('Getting Lights...')
@@ -1204,16 +1206,20 @@ class LazySiouxsie(QtGui.QWidget):
         for part in system_parts:
             if cmds.objExists(part):
                 self.ui.status_label.setText('Turntable parts are already found in the scene! Run from a clean scene.')
+                logger.warning('This scene has previous turntable configuration parts in it.  Open a clean file!')
                 return False
         file_name = cmds.file(q=True, sn=True)
         if self.turntable_task in file_name:
             self.ui.status_label.setText('It looks like this is already a turntable file. Run from a clean scene.')
+            logger.warning('This is already a turntable file, and the setup should already be done.  Try running the '
+                           'tool from a model or lookdev file.')
             return False
         all_geo = cmds.ls(type=['mesh', 'nurbsSurface'])
         for geo in all_geo:
             if 'ground' in geo.lower():
                 self.ground_plane = geo
                 self.ui.ground_plane.setChecked(False)
+                logger.info('Ground plane detected.  Turning off auto ground plane.')
                 break
         return True
 
