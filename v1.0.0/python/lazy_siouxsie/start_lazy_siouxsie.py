@@ -128,22 +128,22 @@ class LazySiouxsie(QtGui.QWidget):
         deadline_connection = self._app.get_setting('deadline_connection')
         deadline_port = int(self._app.get_setting('deadline_port'))
         self.dl = connect.DeadlineCon(deadline_connection, deadline_port)
-        logger.info('Deadline Connection made!')
+        logger.debug('Deadline Connection made!')
 
         self.turntable_task = self._app.get_setting('turntable_task')
         self.render_format = self._app.get_setting('output_format')
-        logger.info('Collected Turntable Configuration Settings.')
+        logger.debug('Collected Turntable Configuration Settings.')
 
         self.ground_plane = None
         self.scene_lights = None
         self.scene_selection = cmds.ls(sl=True)
         self.has_lights = self.check_scene_lights()
-        logger.info('Preforming Flight Precheck...')
+        logger.debug('Preforming Flight Precheck...')
         self.preflight_check = self.do_preflight_check()
         if not self.preflight_check:
             self.ui.spin_btn.setEnabled(False)
             self.ui.status_label.setStyleSheet('color: rgb(255, 0, 0);')
-        logger.info('Precheck complete.')
+        logger.debug('Precheck complete.')
 
         engine = self._app.engine
         self.sg = engine.sgtk
@@ -153,7 +153,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.entity = self.context.entity['type']
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
-        logger.info('Shotgun context collected.')
+        logger.debug('Shotgun context collected.')
 
         filters = [
             ['id', 'is', self.project_id]
@@ -177,7 +177,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.pixel_aspect.setText(pixel_aspect)
         self.ui.rendering_engine.setCurrentText(renderers)
         hdri_path = self._app.get_setting('hdri_path')
-        logger.info('Shotgun Render Settings Collected.')
+        logger.debug('Shotgun Render Settings Collected.')
 
         if os.path.exists(hdri_path):
             self.hdri_path = hdri_path
@@ -204,7 +204,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.endFrame.valueChanged.connect(self.set_frames)
         self.ui.render_format.setCurrentText(self.render_format)
         self.ui.scene_lights.clicked.connect(self.check_scene_lights)
-        logger.info('Tool setup complete!')
+        logger.debug('Tool setup complete!')
 
     def set_frames(self):
         start = self.ui.startFrame.value()
@@ -774,12 +774,13 @@ class LazySiouxsie(QtGui.QWidget):
         return False
 
     def get_scene_lights(self, renderer=None, group=None, center=None):
-        logger.info('Begin packing scene lights.')
+        logger.debug('Begin packing scene lights.')
         lights = []
         self.ui.build_progress.setValue(38)
         self.ui.status_label.setText('Getting Lights...')
         light_types = self.light_types
 
+        logger.debug('Checking for known light types...')
         for light in light_types:
             type_list = cmds.ls(type=light)
             for t in type_list:
@@ -790,8 +791,10 @@ class LazySiouxsie(QtGui.QWidget):
         for light in cmds.ls(lt=True):
             lights.append(light)
 
+        logger.debug('Lights collected.')
         light_roots = []
         if lights:
+            logger.debug('Parsing lights.')
             for light in lights:
                 cmds.select(light, r=True)
                 i = 0
@@ -805,10 +808,12 @@ class LazySiouxsie(QtGui.QWidget):
                     light_roots.remove(root)
             cmds.select(light_roots, r=True)
         if lights:
+            logger.debug('Grouping Lights...')
             light_group = cmds.group(n='_turntable_light_group')
         else:
             light_group = None
         if center and light_group:
+            logger.debug('Centering light group pivot')
             cmds.select(light_group, r=True)
             cmds.xform(piv=center, ws=True)
         return [lights, light_group]
@@ -816,9 +821,11 @@ class LazySiouxsie(QtGui.QWidget):
     def browse(self):
         finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
         if finder:
+            logger.debug('Returning Custom HDRI: %s' % finder[0])
             self.ui.custom_hdri.setText(finder[0])
 
     def get_scene_details(self):
+        logger.debug('Getting scene details from Shotgun...')
         filters = [
             ['name', 'is', self.project]
         ]
@@ -835,6 +842,7 @@ class LazySiouxsie(QtGui.QWidget):
         return info
 
     def find_turntable_task(self):
+        logger.info('Collecting Turntable file name from Shotgun and System...')
         filters = [
             ['entity', 'is', {'type': 'Asset', 'id': self.entity_id}]
         ]
@@ -862,10 +870,11 @@ class LazySiouxsie(QtGui.QWidget):
         tt_path = path.replace(settings['task_name'], self.turntable_task)
         self.ui.build_progress.setValue(3)
         self.ui.status_label.setText('Turntable path: %s' % tt_path)
-        # template = self.sg.templates['maya_asset_work']
+        logger.debug('Find version number...')
         version_pattern = r'(_v\d*|_V\d*)'
         if turntable:
             # Find latest turntable task
+            logger.debug('Turntable task already exists!')
             if os.path.isdir(tt_path):
                 files = glob.glob('%s/*[0-9]*' % tt_path)
                 if files:
@@ -882,13 +891,17 @@ class LazySiouxsie(QtGui.QWidget):
                     next_version_number = str('{n:0{l}d}'.format(n=next_version, l=version_count))
                     version = last_version.replace(version_number, next_version_number)
                     next_file = last_file.replace(last_version, version)
+                    logger.debug('Next filename created!  %s' % next_file)
                 else:
                     next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
+                    logger.debug('First filename created!  %s' % next_file)
             else:
                 os.makedirs(tt_path)
                 next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
+                logger.debug('First filename and folder structure created!  %s' % next_file)
         else:
             # Create Turntable Task
+            logger.info('Creating initial turntable task on Shotgun...')
             filters = [
                 ['code', 'is', 'Turntable']
             ]
@@ -901,18 +914,23 @@ class LazySiouxsie(QtGui.QWidget):
                 'step': {'type': 'Step', 'id': step['id']},
             }
             new_task = self.sg.shotgun.create('Task', task_data)
+            logger.debug('Task created!: %s' % new_task)
             if not os.path.isdir(tt_path):
                 os.makedirs(tt_path)
                 next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
+                logger.debug('Task set on Shotgun and new filename and folder structure created! %s' % next_file)
         self.ui.build_progress.setValue(4)
         self.ui.status_label.setText('New Filename: %s' % next_file)
+        logger.info('New Filename: %s' % next_file)
         return next_file
 
     def build_camera(self, start=1, end=120, group=None):
         # Get the set/scene size from the bounding box
+        logger.info('Building the camera system...')
         cmds.select(group, r=True)
         self.ui.build_progress.setValue(16)
         self.ui.status_label.setText('Getting scene center point...')
+        logger.debug('Getting scene center point...')
         scene_bb = cmds.xform(q=True, bb=True)
         # Find the center from the bounding box
         x_center = scene_bb[3] - ((scene_bb[3] - scene_bb[0]) / 2)
@@ -920,12 +938,14 @@ class LazySiouxsie(QtGui.QWidget):
         z_center = scene_bb[5] - ((scene_bb[5] - scene_bb[2]) / 2)
         self.ui.build_progress.setValue(18)
         self.ui.status_label.setText('Animating the Set...')
+        logger.debug('Animating the set...')
         cmds.select('_Turntable_Set_Prep', r=True)
         bb_center = [x_center, y_center, z_center]
         cmds.xform(piv=[x_center, y_center, z_center])
         cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-25, ott='linear', t=start)
         cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-385.0, itt='linear', t=end)
         # calculate a new height for the camera based on the bounding box
+        logger.debug('Calculating camera height from bounding box...')
         user_cam_height = self.ui.camera_height.text()
         if user_cam_height != '':
             cam_height = float(user_cam_height) + scene_bb[1]
@@ -934,13 +954,16 @@ class LazySiouxsie(QtGui.QWidget):
         # Create a new camera and fit it to the current view
         self.ui.build_progress.setValue(20)
         self.ui.status_label.setText('Creating camera...')
+        logger.debug('Creating camera...')
         cam = cmds.camera(n='turn_table_cam')
         cmds.lookThru(cam)
         cmds.viewFit()
         self.ui.build_progress.setValue(21)
         self.ui.status_label.setText('Beginning camera position calculations...')
+        logger.info('Beginning camera position calculations...')
         # Get the position of the new camera after placement
         cam_pos = cmds.xform(q=True, ws=True, t=True)
+        logger.debug('Get initial camera position from frame.')
         # Separate out the mins and maxs of the bounding box for triangulation
         self.ui.build_progress.setValue(22)
         x_min = scene_bb[0]
@@ -951,6 +974,7 @@ class LazySiouxsie(QtGui.QWidget):
         z_max = scene_bb[5]
         # Get the cube root hypotenuse of the bounding box to calculate the overall scene's widest distance
         self.ui.build_progress.setValue(24)
+        logger.info('Calculating maximum scene scale...')
         cube_diff = math.pow((x_max - x_min), 3) + math.pow((y_max - y_min), 3) + math.pow((z_max - z_min), 3)
         max_hypotenuse = cube_diff ** (1. / 3.)
         # Cut the width in half to create a 90 degree angle
@@ -969,9 +993,11 @@ class LazySiouxsie(QtGui.QWidget):
         #     alto = float(math.sqrt((depth ** 2) + (height **2)))
         # if (alto * 0.667) > base:
         #     max_hypotenuse *= (aspect_ratio * 0.667)
+        logger.debug('Set base frame width...')
         half_width = max_hypotenuse / 2
         # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view
         # must be calculated from that
+        logger.debug('Get camera aperture and focal length...')
         horizontalApertureInch = cmds.getAttr('%s.horizontalFilmAperture' % cam[1])
         # convert to mm
         horizontalAperture_mm = 2.54 * horizontalApertureInch * 10
@@ -979,16 +1005,19 @@ class LazySiouxsie(QtGui.QWidget):
         focalLength = cmds.getAttr('%s.focalLength' % cam[1])
         # Calculate FOV from horizontal aperture and focal length
         self.ui.build_progress.setValue(27)
+        logger.debug('Calculate the FOV...')
         fov = math.degrees(2 * math.atan(horizontalAperture_mm / (focalLength * 2)))
         # Cut the FOV in half to get angle of right angle.
         half_angle = fov / 2
         # Calculate the distance for the camera
         self.ui.build_progress.setValue(28)
+        logger.info('Calculating the camera distance...')
         angle_tan = math.tan(half_angle)
         distance = cam_pos[2] - (half_width / angle_tan)
         # Set the new camera distance and height
         self.ui.build_progress.setValue(29)
         self.ui.status_label.setText('Adjusting camera position...')
+        logger.debug('Repositioning camera...')
         cmds.setAttr('%s.ty' % cam[0], cam_height)
         cmds.setAttr('%s.tz' % cam[0], distance)
         # Get the new camera position
@@ -996,6 +1025,7 @@ class LazySiouxsie(QtGui.QWidget):
         # Calculate the decension angle from the center of the scene to the new camera position
         self.ui.build_progress.setValue(30)
         self.ui.status_label.setText('Adjusting camera angle...')
+        logger.info('Calculating the camera angle...')
         cam_height = new_cam_pos[1] - bb_center[1]
         cam_dist = new_cam_pos[2] - bb_center[2]
         cam_angle = -1 * (math.degrees(math.atan(cam_height / cam_dist)))
@@ -1004,29 +1034,36 @@ class LazySiouxsie(QtGui.QWidget):
         # Group the camera, center the pivot, and animate the rotation
 
         self.ui.build_progress.setValue(32)
-        self.ui.status_label.setText('Animating the camera...')
+        self.ui.status_label.setText('Grouping the camera setup...')
+        logger.debug('Grouping the camera setup...')
         cmds.group(n='_turntable_cam')
         cameras = cmds.listCameras(p=True, o=True)
+        logger.debug('Set camera renderabilities for all cameras...')
         for camera in cameras:
             if camera == cam[0]:
                 cmds.setAttr('%s.renderable' % camera, 1)
             else:
                 cmds.setAttr('%s.renderable' % camera, 0)
+        logger.info('Camera setup complete!')
         return [cam, bb_center, scene_bb, max_hypotenuse]
 
     def animate_dome(self, trans=None, start=None, end=None):
+        logger.info('Animating %s...' % trans)
         if trans:
             cmds.setKeyframe('%s.ry' % trans, v=25, ott='linear', t=start)
             cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
 
     def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
+        logger.info('Submitting to Deadline...')
         self.ui.build_progress.setValue(77)
         self.ui.status_label.setText('Collect Deadline Pools...')
+        logger.debug('Collecting the Deadline Pools...')
         all_pools = self.list_deadline_pools()
         ext = self.ui.render_format.currentText()
 
         self.ui.build_progress.setValue(78)
         self.ui.status_label.setText('Setup Deadline Environments and Datetime...')
+        logger.debug('Setup Deadline Environment and Datetime...')
         file_name = cmds.file(q=True, sn=True)
         file_path = os.path.dirname(file_name)
         path_settings = self.sg.templates['maya_asset_work']
@@ -1039,13 +1076,16 @@ class LazySiouxsie(QtGui.QWidget):
         output_path = '%s/publish/renders/' % proj_root
         version = task['version']
         t = 0
+        logger.info('Parsing Render Layers into Render Jobs...')
         for layer in layers:
             lyr = str(layer)
             job_info = ''
             plugin_info = ''
             job_path = os.environ['TEMP'] + '\\_job_submissions'
+            logger.debug('Checking job submission path...')
             if not os.path.exists(job_path):
                 os.mkdir(job_path)
+            logger.debug('Setting Job date and time...')
             h = datetime.now().hour
             m = datetime.now().minute
             s = datetime.now().second
@@ -1059,6 +1099,7 @@ class LazySiouxsie(QtGui.QWidget):
             Y = datetime.now().year
             d = '%s-%s-%s' % (D, M, Y)
             d_flat = str(d).replace('-', '')
+            logger.debug('Creating job and plugin files...')
             ji_filename = '%s_%s%s%s%s%s_jobInfo.job' % (base_name, d_flat, h, m, s, t)
             ji_filepath = job_path + '\\' + ji_filename
             pi_filename = '%s_%s%s%s%s%s_pluginInfo.job' % (base_name, d_flat, h, m, s, t)
@@ -1067,6 +1108,7 @@ class LazySiouxsie(QtGui.QWidget):
             plugin_info_file = open(pi_filepath, 'w+')
 
             # Setup JobInfo
+            logger.debug('Collecting user, resolution, frames and pool data...')
             user_name = os.environ['USERNAME']
             frames = '%s-%s' % (start, end)
             pool = None
@@ -1085,6 +1127,7 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(79)
             self.ui.status_label.setText('Create Job Info File...')
+            logger.debug('Creating Job Info File...')
             job_info += 'Name=%s - %s\n' % (base_name, lyr)
             job_info += 'BatchName=%s\n' % base_name
             job_info += 'UserName=%s\n' % user_name
@@ -1117,6 +1160,7 @@ class LazySiouxsie(QtGui.QWidget):
             # Setup PluginInfo
             self.ui.build_progress.setValue(80)
             self.ui.status_label.setText('Build Plugin Info File...')
+            logger.debug('Creating PluginInfo file...')
             plugin_info += 'Animation=1\n'
             plugin_info += 'Renderer=%s\n' % renderer
             plugin_info += 'UsingRenderLayers=1\n'
@@ -1149,6 +1193,7 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(81)
             self.ui.status_label.setText('Getting slice status. Ignore 0 degrees...')
+            logger.debug('Getting slice status.  Ignoring 0 degrees...')
             degree_slice = self.ui.render_slices.currentText()
             degree = float(degree_slice)
             frame_range = float(end - start + 1)
@@ -1158,11 +1203,13 @@ class LazySiouxsie(QtGui.QWidget):
             try:
                 self.ui.build_progress.setValue(82)
                 self.ui.status_label.setText('Submitting the Job to Deadline...')
+                logger.info('Submitting the job to Deadline...')
                 submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
                 # Setup slice conditions here, to then suspend specific job tasks.
                 if submitted and degree != 0:
                     self.ui.build_progress.setValue(83)
                     self.ui.status_label.setText('Parsing Slices...')
+                    logger.info('Parsing slices....')
                     job_id = submitted['_id']
                     tasks = self.dl.Tasks.GetJobTasks(job_id)
                     task_count = len(tasks)
@@ -1177,17 +1224,20 @@ class LazySiouxsie(QtGui.QWidget):
                         else:
                             self.ui.build_progress.setValue(int(percent))
                             self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+                            logger.debug('Rendering frame %s' % task_id)
                             slice_frame += slice_frames
                     if task_list:
+                        logger.debug('Suspending non-sliced tasks...')
                         self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
             except Exception, e:
                 submitted = False
-                print 'FAILED! %s' % e
+                logger.error('JOB SUBMISSION FAILED! %s' % e)
             t += 1
 
     def list_deadline_pools(self):
         try:
             # pools = ['none', 'maya_vray', 'nuke', 'maya_redshift', 'houdini', 'alembics', 'arnold', 'caching']
+            logger.debug('Return Deadline pools.')
             pools = self.dl.Pools.GetPoolNames()
         except Exception:
             pools = []
@@ -1219,7 +1269,7 @@ class LazySiouxsie(QtGui.QWidget):
             if 'ground' in geo.lower():
                 self.ground_plane = geo
                 self.ui.ground_plane.setChecked(False)
-                logger.info('Ground plane detected.  Turning off auto ground plane.')
+                logger.debug('Ground plane detected.  Turning off auto ground plane.')
                 break
         return True
 
