@@ -38,6 +38,7 @@ from datetime import datetime
 # the code will be compatible with both PySide and PyQt.
 from sgtk.platform.qt import QtCore, QtGui
 from .ui.lazy_siouxsie_ui import Ui_lazySiouxsie
+logger = sgtk.platform.get_logger(__name__)
 
 def show_dialog(app_instance):
     """
@@ -112,6 +113,7 @@ class LazySiouxsie(QtGui.QWidget):
         # most of the useful accessors are available through the Application class instance
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
+        logger.info('Starting Lazy Siouxsie!')
 
         # Connect to Deadline
         os_sys = platform.system()
@@ -126,18 +128,22 @@ class LazySiouxsie(QtGui.QWidget):
         deadline_connection = self._app.get_setting('deadline_connection')
         deadline_port = int(self._app.get_setting('deadline_port'))
         self.dl = connect.DeadlineCon(deadline_connection, deadline_port)
+        logger.info('Deadline Connection made!')
 
         self.turntable_task = self._app.get_setting('turntable_task')
         self.render_format = self._app.get_setting('output_format')
+        logger.info('Collected Turntable Configuration Settings.')
 
         self.ground_plane = None
         self.scene_lights = None
         self.scene_selection = cmds.ls(sl=True)
         self.has_lights = self.check_scene_lights()
+        logger.info('Preforming Flight Precheck...')
         self.preflight_check = self.do_preflight_check()
         if not self.preflight_check:
             self.ui.spin_btn.setEnabled(False)
             self.ui.status_label.setStyleSheet('color: rgb(255, 0, 0);')
+        logger.info('Precheck complete.')
 
         engine = self._app.engine
         self.sg = engine.sgtk
@@ -147,6 +153,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.entity = self.context.entity['type']
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
+        logger.info('Shotgun context collected.')
 
         filters = [
             ['id', 'is', self.project_id]
@@ -169,8 +176,9 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.res_height.setText(resolution_height)
         self.ui.pixel_aspect.setText(pixel_aspect)
         self.ui.rendering_engine.setCurrentText(renderers)
-
         hdri_path = self._app.get_setting('hdri_path')
+        logger.info('Shotgun Render Settings Collected.')
+
         if os.path.exists(hdri_path):
             self.hdri_path = hdri_path
             files = os.listdir(hdri_path)
@@ -196,6 +204,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.endFrame.valueChanged.connect(self.set_frames)
         self.ui.render_format.setCurrentText(self.render_format)
         self.ui.scene_lights.clicked.connect(self.check_scene_lights)
+        logger.info('Tool setup complete!')
 
     def set_frames(self):
         start = self.ui.startFrame.value()
