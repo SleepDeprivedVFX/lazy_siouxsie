@@ -131,6 +131,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.render_format = self._app.get_setting('output_format')
 
         self.ground_plane = None
+        self.scene_lights = None
         self.scene_selection = cmds.ls(sl=True)
         self.has_lights = self.check_scene_lights()
         self.preflight_check = self.do_preflight_check()
@@ -221,6 +222,10 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.status_label.setText('Getting HDRI Selections...')
             selected_hdri = self.get_hdri_files()
 
+            # Temporarily hide all lights
+            if self.scene_lights:
+                cmds.hide(self.scene_lights)
+
             # Select and group the set
             self.ui.build_progress.setValue(10)
             self.ui.status_label.setText('Selecting scene geometry...')
@@ -271,6 +276,10 @@ class LazySiouxsie(QtGui.QWidget):
             # This will need some major renumbering
             self.ui.build_progress.setValue(36)
             self.ui.status_label.setText('Get scene lighting requirements...')
+            # Restore lights
+            if self.scene_lights:
+                cmds.showHidden(self.scene_lights)
+
             use_scene_lighting = self.ui.scene_lights.isChecked()
             if use_scene_lighting and self.has_lights:
                 self.ui.build_progress.setValue(37)
@@ -393,6 +402,8 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.status_label.setText('Done!')
             sleep(3)
             self.cancel()
+            if self.scene_selection:
+                cmds.select(self.scene_selection, r=True)
 
     def texture_ground(self, ground=None, renderer=None, file_node=None):
         if ground:
@@ -744,6 +755,7 @@ class LazySiouxsie(QtGui.QWidget):
         if lights:
             self.ui.scene_lights.setChecked(True)
             self.ui.status_label.setText('Lights in the Scene!')
+            self.scene_lights = lights
             self.ui.build_progress.setValue(0)
             return True
         self.ui.scene_lights.setChecked(False)
@@ -1190,7 +1202,7 @@ class LazySiouxsie(QtGui.QWidget):
             return False
         all_geo = cmds.ls(type=['mesh', 'nurbsSurface'])
         for geo in all_geo:
-            if 'ground' in geo:
+            if 'ground' in geo.lower():
                 self.ground_plane = geo
                 self.ui.ground_plane.setChecked(False)
                 break
