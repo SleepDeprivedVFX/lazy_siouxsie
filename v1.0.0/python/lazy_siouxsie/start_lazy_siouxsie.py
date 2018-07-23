@@ -109,8 +109,6 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui = Ui_lazySiouxsie()
         self.ui.setupUi(self)
 
-        self.has_lights = self.check_scene_lights()
-
         # most of the useful accessors are available through the Application class instance
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
@@ -131,6 +129,14 @@ class LazySiouxsie(QtGui.QWidget):
 
         self.turntable_task = self._app.get_setting('turntable_task')
         self.render_format = self._app.get_setting('output_format')
+
+        self.ground_plane = None
+        self.scene_selection = cmds.ls(sl=True)
+        self.has_lights = self.check_scene_lights()
+        self.preflight_check = self.do_preflight_check()
+        if not self.preflight_check:
+            self.ui.spin_btn.setEnabled(False)
+            self.ui.status_label.setStyleSheet('color: rgb(255, 0, 0);')
 
         engine = self._app.engine
         self.sg = engine.sgtk
@@ -219,6 +225,11 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(10)
             self.ui.status_label.setText('Selecting scene geometry...')
             geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+            for g in geo:
+                if 'ground' in g.lower():
+                    geo.remove(g)
+                    cmds.select(g, r=True)
+                    cmds.hide()
             cmds.select(geo, r=True)
             z = 1
             while z < 100:
@@ -286,6 +297,11 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(51)
             self.ui.status_label.setText('Check groundplane setting...')
+            # Reset the artists ground plane
+            if self.ground_plane:
+                cmds.select(self.ground_plane, r=True)
+                cmds.showHidden(self.ground_plane)
+            # Check for the auto-ground plane
             ground = self.ui.ground_plane.isChecked()
             ground_plane = None
             if ground:
@@ -1153,4 +1169,30 @@ class LazySiouxsie(QtGui.QWidget):
         except Exception:
             pools = []
         return pools
+
+    def do_preflight_check(self):
+        system_parts = [
+            '_Turntable_Set_Prep',
+            '_turntable_cam',
+            'turn_table_cam1',
+            '_HDRI_light',
+            '_turntable_ground_plane',
+            '_turntable_chrome_ball',
+            '_turntable_gray_ball'
+        ]
+        for part in system_parts:
+            if cmds.objExists(part):
+                self.ui.status_label.setText('Turntable parts are already found in the scene! Run from a clean scene.')
+                return False
+        file_name = cmds.file(q=True, sn=True)
+        if self.turntable_task in file_name:
+            self.ui.status_label.setText('It looks like this is already a turntable file. Run from a clean scene.')
+            return False
+        all_geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+        for geo in all_geo:
+            if 'ground' in geo:
+                self.ground_plane = geo
+                self.ui.ground_plane.setChecked(False)
+                break
+        return True
 
