@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>557</width>
-    <height>680</height>
+    <height>804</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -277,6 +277,112 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_12">
+     <item>
+      <widget class="QLabel" name="rot_range_label">
+       <property name="text">
+        <string>Rotation Range:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="full_circle">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>360°</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_10">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="partial_circle">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>Range</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="from_label">
+       <property name="text">
+        <string>From:</string>
+       </property>
+       <property name="buddy">
+        <cstring>from_range</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="from_range">
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>90</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="to_label">
+       <property name="text">
+        <string>To:</string>
+       </property>
+       <property name="buddy">
+        <cstring>to_range</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="to_range">
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>-90</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_9">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -1018,17 +1124,28 @@
     </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="submit_to_deadline">
-     <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
-     </property>
-     <property name="text">
-      <string>Submit to Deadline</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_13">
+     <item>
+      <widget class="QCheckBox" name="open_turntable">
+       <property name="text">
+        <string>Open Turntable File When Finished</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="submit_to_deadline">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>Submit to Deadline</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -1102,6 +1219,35 @@ QProgressBar::chunk {
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>spin_btn</tabstop>
+  <tabstop>cancel_btn</tabstop>
+  <tabstop>browse_btn</tabstop>
+  <tabstop>startFrame</tabstop>
+  <tabstop>endFrame</tabstop>
+  <tabstop>res_scale</tabstop>
+  <tabstop>camera_height</tabstop>
+  <tabstop>rendering_engine</tabstop>
+  <tabstop>render_slices</tabstop>
+  <tabstop>render_format</tabstop>
+  <tabstop>quality_value</tabstop>
+  <tabstop>scene_lights</tabstop>
+  <tabstop>ground_plane</tabstop>
+  <tabstop>chrome_balls</tabstop>
+  <tabstop>submit_to_deadline</tabstop>
+  <tabstop>full_circle</tabstop>
+  <tabstop>partial_circle</tabstop>
+  <tabstop>from_range</tabstop>
+  <tabstop>to_range</tabstop>
+  <tabstop>res_width</tabstop>
+  <tabstop>res_height</tabstop>
+  <tabstop>pixel_aspect</tabstop>
+  <tabstop>quality_slider</tabstop>
+  <tabstop>hdriList</tabstop>
+  <tabstop>custom_hdri</tabstop>
+  <tabstop>total_frames</tabstop>
+  <tabstop>file_path</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

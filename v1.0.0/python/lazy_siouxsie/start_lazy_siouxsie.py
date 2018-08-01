@@ -203,7 +203,11 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.startFrame.valueChanged.connect(self.set_frames)
         self.ui.endFrame.valueChanged.connect(self.set_frames)
         self.ui.render_format.setCurrentText(self.render_format)
-        self.ui.scene_lights.clicked.connect(self.check_scene_lights)
+        self.ui.scene_lights.clicked.connect(self.scene_lights_checkbox)
+        self.ui.full_circle.clicked.connect(self.set_range)
+        self.ui.partial_circle.clicked.connect(self.set_range)
+        self.ui.from_range.setEnabled(False)
+        self.ui.to_range.setEnabled(False)
         logger.debug('Tool setup complete!')
 
     def set_frames(self):
@@ -212,6 +216,14 @@ class LazySiouxsie(QtGui.QWidget):
         dif = (end - start) + 1
         total_frames = dif * 2
         self.ui.total_frames.setText(str(total_frames))
+
+    def set_range(self):
+        if self.ui.full_circle.isChecked():
+            self.ui.from_range.setEnabled(False)
+            self.ui.to_range.setEnabled(False)
+        else:
+            self.ui.from_range.setEnabled(True)
+            self.ui.to_range.setEnabled(True)
 
     def cancel(self):
         self.close()
@@ -295,6 +307,10 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.status_label.setText('Get Scene Lights...')
                 get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group, center=center)
                 self.animate_dome(trans=get_scene_lights[1], start=end, end=extended_end)
+            elif not use_scene_lighting and self.has_lights:
+                self.ui.build_progress.setValue(37)
+                self.ui.status_label.setText('Packing Artist Lights...')
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group, center=center)
             else:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Ignoring scene lights...')
@@ -403,12 +419,16 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(96)
             self.ui.status_label.setText('Saving Turntable file...')
             cmds.file(s=True)
-            self.ui.build_progress.setValue(99)
-            self.ui.status_label.setText('Reopening the main file...')
-            file_to_return = self.ui.file_path.text()
-            cmds.file(file_to_return, o=True)
-            self.ui.build_progress.setValue(100)
-            self.ui.status_label.setText('Done!')
+            if self.ui.open_turntable.isChecked():
+                self.ui.build_progress.setValue(100)
+                self.ui.status_label.setText('Done!')
+            else:
+                self.ui.build_progress.setValue(99)
+                self.ui.status_label.setText('Reopening the main file...')
+                file_to_return = self.ui.file_path.text()
+                cmds.file(file_to_return, o=True)
+                self.ui.build_progress.setValue(100)
+                self.ui.status_label.setText('Done!')
             sleep(3)
             self.cancel()
             if self.scene_selection:
@@ -732,7 +752,7 @@ class LazySiouxsie(QtGui.QWidget):
                     cmds.select(light_grp, r=True)
                     cmds.setAttr('%s.visibility' % light_grp, 0)
 
-        if lights:
+        if lights and self.ui.scene_lights.isChecked():
             render_layer = rs.createRenderLayer('Artist_Lights')
             collection_set = render_layer.createCollection('geo')
             collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
@@ -747,6 +767,9 @@ class LazySiouxsie(QtGui.QWidget):
             utils.createAbsoluteOverride(light_grp, 'visibility')
             cmds.select(light_grp, r=True)
             cmds.setAttr('%s.visibility' % light_grp, 1)
+        elif lights and not self.ui.scene_lights.isChecked():
+            cmds.select(light_grp, r=True)
+            cmds.setAttr('%s.visibility' % light_grp, 0)
 
         rs.switchToLayer(None)
         return layers
@@ -772,6 +795,11 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.status_label.setText('No lights found in scene')
         self.ui.build_progress.setValue(0)
         return False
+
+    def scene_lights_checkbox(self):
+        if not self.has_lights:
+            self.ui.scene_lights.setChecked(False)
+
 
     def get_scene_lights(self, renderer=None, group=None, center=None):
         logger.debug('Begin packing scene lights.')
@@ -939,11 +967,10 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.build_progress.setValue(18)
         self.ui.status_label.setText('Animating the Set...')
         logger.debug('Animating the set...')
-        cmds.select('_Turntable_Set_Prep', r=True)
+        cmds.select(group, r=True)
         bb_center = [x_center, y_center, z_center]
         cmds.xform(piv=[x_center, y_center, z_center])
-        cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-25, ott='linear', t=start)
-        cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-385.0, itt='linear', t=end)
+        self.animate_dome(trans=group, start=start, end=end)
         # calculate a new height for the camera based on the bounding box
         logger.debug('Calculating camera height from bounding box...')
         user_cam_height = self.ui.camera_height.text()
@@ -1049,9 +1076,18 @@ class LazySiouxsie(QtGui.QWidget):
 
     def animate_dome(self, trans=None, start=None, end=None):
         logger.info('Animating %s...' % trans)
+        rot_range_type = self.ui.full_circle.isChecked()
+        if rot_range_type:
+            start_angle = 25.0
+            end_angle = -385.0
+        else:
+            start_angle = float(self.ui.from_range.text())
+            end_angle = float(self.ui.to_range.text())
+            print start_angle
+            print end_angle
         if trans:
-            cmds.setKeyframe('%s.ry' % trans, v=25, ott='linear', t=start)
-            cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
+            cmds.setKeyframe('%s.ry' % trans, v=start_angle, ott='linear', t=start)
+            cmds.setKeyframe('%s.ry' % trans, v=end_angle, itt='linear', t=end)
 
     def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
         logger.info('Submitting to Deadline...')

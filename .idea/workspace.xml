@@ -25,8 +25,8 @@
           <file leaf-file-name="lazy_siouxsie_ui.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="575">
-                  <caret line="23" column="86" lean-forward="true" selection-start-line="23" selection-start-column="86" selection-end-line="23" selection-end-column="86" />
+                <state relative-caret-position="275">
+                  <caret line="11" column="30" lean-forward="true" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
                   <folding />
                 </state>
               </provider>
@@ -67,25 +67,10 @@
           <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="7198">
-                  <caret line="1119" column="51" lean-forward="true" selection-start-line="1119" selection-start-column="51" selection-end-line="1119" selection-end-column="51" />
+                <state relative-caret-position="623">
+                  <caret line="970" column="50" lean-forward="true" selection-start-line="970" selection-start-column="50" selection-end-line="970" selection-end-column="50" />
                   <folding>
                     <element signature="e#678#689#0" expanded="true" />
-                    <element signature="e#1435#1945#0" expanded="false" />
-                    <element signature="e#17018#18253#0" expanded="false" />
-                    <element signature="e#18372#25604#0" expanded="false" />
-                    <element signature="e#25679#28927#0" expanded="false" />
-                    <element signature="e#29025#31636#0" expanded="false" />
-                    <element signature="e#31676#32100#0" expanded="false" />
-                    <element signature="e#32284#35099#0" expanded="false" />
-                    <element signature="e#35143#35837#0" expanded="false" />
-                    <element signature="e#35919#37208#0" expanded="false" />
-                    <element signature="e#37240#37387#0" expanded="false" />
-                    <element signature="e#37430#38138#0" expanded="false" />
-                    <element signature="e#38183#41616#0" expanded="false" />
-                    <element signature="e#41684#47070#0" expanded="false" />
-                    <element signature="e#47142#47303#0" expanded="false" />
-                    <element signature="e#55482#55718#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -180,24 +165,10 @@
           <file leaf-file-name="start_lazy_siouxsie.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1051">
-                  <caret line="931" column="54" lean-forward="false" selection-start-line="931" selection-start-column="54" selection-end-line="931" selection-end-column="54" />
+                <state relative-caret-position="1364">
+                  <caret line="328" column="70" lean-forward="false" selection-start-line="328" selection-start-column="70" selection-end-line="344" selection-end-column="55" />
                   <folding>
                     <element signature="e#678#689#0" expanded="true" />
-                    <element signature="e#1435#1945#0" expanded="false" />
-                    <element signature="e#17018#18253#0" expanded="false" />
-                    <element signature="e#25679#28927#0" expanded="false" />
-                    <element signature="e#29025#31636#0" expanded="false" />
-                    <element signature="e#31676#32100#0" expanded="false" />
-                    <element signature="e#32284#35099#0" expanded="false" />
-                    <element signature="e#35143#35837#0" expanded="false" />
-                    <element signature="e#35919#37208#0" expanded="false" />
-                    <element signature="e#37240#37387#0" expanded="false" />
-                    <element signature="e#37430#38138#0" expanded="false" />
-                    <element signature="e#38183#41616#0" expanded="false" />
-                    <element signature="e#47142#47303#0" expanded="false" />
-                    <element signature="e#47429#55437#0" expanded="false" />
-                    <element signature="e#55482#55718#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -239,13 +210,16 @@
       <find>plugin_info</find>
       <find>getDefaultRenderLayer</find>
       <find>createAbsoluteOverride</find>
+      <find>.info</find>
       <find>, QtGui.QApplication.UnicodeUTF8</find>
+      <find>_Turntable_Set_Prep</find>
     </findStrings>
     <replaceStrings>
       <replace>setValue(</replace>
       <replace>_Turntable_Set_Prep</replace>
       <replace>task</replace>
       <replace>/</replace>
+      <replace>.debug</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -294,6 +268,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -308,6 +283,24 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="v1.0.0" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tk-lazy_siouxsie" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tk-lazy_siouxsie" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="v1.0.0" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -405,7 +398,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -866,7 +858,42 @@
       <option name="project" value="LOCAL" />
       <updated>1532206149465</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="Added catches for previously existing Lazy Siouxsie setup.  Added checks for existing ground planes.">
+      <created>1532327928518</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1532327928518</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Corrected issue with scene lights changing camera angles.">
+      <created>1532330867417</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1532330867417</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Started logging implementation.">
+      <created>1532331659119</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1532331659119</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Added a few more logging outputs.">
+      <created>1532332066193</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1532332066193</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Got most of the logging done.">
+      <created>1532371355269</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1532371355269</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -896,11 +923,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added Color Ball Check box." />
-    <MESSAGE value="Made some, but bad progress on the light setup." />
-    <MESSAGE value="Updated UI with chrome and mirror balls.  Disabled the Scene Lights option.  Set goals for the next steps toward completion" />
-    <MESSAGE value="I have the Arnold Materials setup working, but still have to do the render settings" />
-    <MESSAGE value="Added some render settings for the spheres, but now I'm about to attempt to fix the camera distance problem that showed up in Thing 3" />
     <MESSAGE value="Added render slices to the UI.  Connected the settings to shotgun.  Updated the Tool tips" />
     <MESSAGE value="Added a camera height feature for allowing more directed camera angles.  Added VRay setups for ground plane and spheres.  Have it selecting the defaultRenderLayer and turning it off for rendering.  Need to add the actual render setup and then write the bits for the farm.  Also added another configuration for setting the render format." />
     <MESSAGE value="Got most of the render settings working for vray and arnold.  Moving on to quality settings" />
@@ -921,11 +943,16 @@
     <MESSAGE value="I think I need to rework how the render layers are made." />
     <MESSAGE value="Lunch updates.  Trying to work out all of the overrides" />
     <MESSAGE value="Removed height condition, since it seems to be over compensating." />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed height condition, since it seems to be over compensating." />
+    <MESSAGE value="Added catches for previously existing Lazy Siouxsie setup.  Added checks for existing ground planes." />
+    <MESSAGE value="Corrected issue with scene lights changing camera angles." />
+    <MESSAGE value="Started logging implementation." />
+    <MESSAGE value="Added a few more logging outputs." />
+    <MESSAGE value="Got most of the logging done." />
+    <option name="LAST_COMMIT_MESSAGE" value="Got most of the logging done." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="8" />
+      <option name="time" value="9" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -936,21 +963,6 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#1435#1945#0" expanded="false" />
-            <element signature="e#17018#18253#0" expanded="false" />
-            <element signature="e#18372#25604#0" expanded="false" />
-            <element signature="e#25679#28927#0" expanded="false" />
-            <element signature="e#29025#31636#0" expanded="false" />
-            <element signature="e#31676#32100#0" expanded="false" />
-            <element signature="e#32284#35099#0" expanded="false" />
-            <element signature="e#35143#35837#0" expanded="false" />
-            <element signature="e#35919#37208#0" expanded="false" />
-            <element signature="e#37240#37387#0" expanded="false" />
-            <element signature="e#37430#38138#0" expanded="false" />
-            <element signature="e#38183#41616#0" expanded="false" />
-            <element signature="e#41684#47070#0" expanded="false" />
-            <element signature="e#47142#47303#0" expanded="false" />
-            <element signature="e#55482#55718#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1003,21 +1015,6 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#1435#1945#0" expanded="false" />
-            <element signature="e#17018#18253#0" expanded="false" />
-            <element signature="e#18372#25604#0" expanded="false" />
-            <element signature="e#25679#28927#0" expanded="false" />
-            <element signature="e#29025#31636#0" expanded="false" />
-            <element signature="e#31676#32100#0" expanded="false" />
-            <element signature="e#32284#35099#0" expanded="false" />
-            <element signature="e#35143#35837#0" expanded="false" />
-            <element signature="e#35919#37208#0" expanded="false" />
-            <element signature="e#37240#37387#0" expanded="false" />
-            <element signature="e#37430#38138#0" expanded="false" />
-            <element signature="e#38183#41616#0" expanded="false" />
-            <element signature="e#41684#47070#0" expanded="false" />
-            <element signature="e#47142#47303#0" expanded="false" />
-            <element signature="e#55482#55718#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1044,21 +1041,6 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#1435#1945#0" expanded="false" />
-            <element signature="e#17018#18253#0" expanded="false" />
-            <element signature="e#18372#25604#0" expanded="false" />
-            <element signature="e#25679#28927#0" expanded="false" />
-            <element signature="e#29025#31636#0" expanded="false" />
-            <element signature="e#31676#32100#0" expanded="false" />
-            <element signature="e#32284#35099#0" expanded="false" />
-            <element signature="e#35143#35837#0" expanded="false" />
-            <element signature="e#35919#37208#0" expanded="false" />
-            <element signature="e#37240#37387#0" expanded="false" />
-            <element signature="e#37430#38138#0" expanded="false" />
-            <element signature="e#38183#41616#0" expanded="false" />
-            <element signature="e#41684#47070#0" expanded="false" />
-            <element signature="e#47142#47303#0" expanded="false" />
-            <element signature="e#55482#55718#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1232,33 +1214,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/ui/lazy_siouxsie_ui.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="575">
-          <caret line="23" column="86" lean-forward="true" selection-start-line="23" selection-start-column="86" selection-end-line="23" selection-end-column="86" />
+        <state relative-caret-position="275">
+          <caret line="11" column="30" lean-forward="true" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/v1.0.0/python/lazy_siouxsie/start_lazy_siouxsie.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7198">
-          <caret line="1119" column="51" lean-forward="true" selection-start-line="1119" selection-start-column="51" selection-end-line="1119" selection-end-column="51" />
+        <state relative-caret-position="623">
+          <caret line="970" column="50" lean-forward="true" selection-start-line="970" selection-start-column="50" selection-end-line="970" selection-end-column="50" />
           <folding>
             <element signature="e#678#689#0" expanded="true" />
-            <element signature="e#1435#1945#0" expanded="false" />
-            <element signature="e#17018#18253#0" expanded="false" />
-            <element signature="e#18372#25604#0" expanded="false" />
-            <element signature="e#25679#28927#0" expanded="false" />
-            <element signature="e#29025#31636#0" expanded="false" />
-            <element signature="e#31676#32100#0" expanded="false" />
-            <element signature="e#32284#35099#0" expanded="false" />
-            <element signature="e#35143#35837#0" expanded="false" />
-            <element signature="e#35919#37208#0" expanded="false" />
-            <element signature="e#37240#37387#0" expanded="false" />
-            <element signature="e#37430#38138#0" expanded="false" />
-            <element signature="e#38183#41616#0" expanded="false" />
-            <element signature="e#41684#47070#0" expanded="false" />
-            <element signature="e#47142#47303#0" expanded="false" />
-            <element signature="e#55482#55718#0" expanded="false" />
           </folding>
         </state>
       </provider>
