@@ -366,6 +366,7 @@ class LazySiouxsie(QtGui.QWidget):
             get_spheres = self.ui.chrome_balls.isChecked()
             spheres = []
             if get_spheres:
+                # TODO: Need to refigure out how and where to put the chrome balls.  Check Tiger for example
                 self.ui.build_progress.setValue(56)
                 self.ui.status_label.setText('Finding Radius...')
                 base_max_width = math.sqrt((math.pow((x_max - x_min), 2)) + (math.pow((y_max - y_min), 2)))
@@ -802,7 +803,6 @@ class LazySiouxsie(QtGui.QWidget):
         if not self.has_lights:
             self.ui.scene_lights.setChecked(False)
 
-
     def get_scene_lights(self, renderer=None, group=None, center=None):
         logger.debug('Begin packing scene lights.')
         lights = []
@@ -1087,6 +1087,39 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setKeyframe('%s.ry' % trans, v=start_angle, ott='linear', t=start)
             cmds.setKeyframe('%s.ry' % trans, v=end_angle, itt='linear', t=end)
 
+    def create_draft_version(self, version_name=None, asset=None):
+        # TODO: Might need to find the information from the Turntable.main task, whether created or reused.
+        """
+        description = 'New version found in the remote folder.\nOriginal Filename: %s' % filename
+            version_data = {
+                'project': {'type': 'Project', 'id': proj_id},
+                'description': description,
+                'sg_status_list': 'rev',
+                'code': filename,
+                'entity': {'type': 'Asset', 'id': asset_id},
+                'sg_task': {'type': 'Task', 'id': task_id}
+            }
+
+            # Open the database
+            f = open(db, 'r')
+            read_db = js.load(f)
+            sg = Shotgun(shotgun_conf['url'], shotgun_conf['name'], shotgun_conf['key'])
+            new_version = sg.create('Version', version_data)
+            sg.upload_thumbnail('Version', new_version['id'], file_path)
+            sg.upload('Version', new_version['id'], file_path, field_name='sg_uploaded_movie', display_name=filename)
+        :return:
+        """
+        version_data = {}
+        data = {
+            'project': {'type': 'Project', 'id': self.project_id},
+            'description': 'Lazy Siouxsie Auto Turntable',
+            'sg_status_list': 'rev',
+            'code': version_name,
+            'entity': {'type': 'Asset', 'id': asset_id},
+            'sg_task': {'type': 'Task', 'id': task_id}
+        }
+        return version_data
+
     def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
         logger.info('Submitting to Deadline...')
         self.ui.build_progress.setValue(77)
@@ -1159,6 +1192,9 @@ class LazySiouxsie(QtGui.QWidget):
             resolutionHeight *= resolution_scale
             resolutionWidth *= resolution_scale
 
+            # Create a Shotgun Version for Draft...
+            draft = self.create_draft_version(version_name=base_name, asset=task['Asset'])
+
             self.ui.build_progress.setValue(79)
             self.ui.status_label.setText('Create Job Info File...')
             logger.debug('Creating Job Info File...')
@@ -1179,6 +1215,29 @@ class LazySiouxsie(QtGui.QWidget):
             job_info += 'ExtraInfo3=%s\n' % base_name
             job_info += 'ExtraInfo4=Lazy Siouxsie Turntable\n'
             job_info += 'ExtraInfo5=%s\n' % user_name
+            # Draft Submission details
+            job_info += 'ExtraInfoKeyValue0=UserName=%s\n' % user_name
+            job_info += 'ExtraInfoKeyValue1=DraftFrameRate=24\n'
+            job_info += 'ExtraInfoKeyValue2=DraftExtension=mov\n'
+            job_info += 'ExtraInfoKeyValue3=DraftCodec=h264\n'
+            job_info += 'ExtraInfoKeyValue4=DraftQuality=100\n'
+            job_info += 'ExtraInfoKeyValue5=Description=Lazy Siouxsie Turntable Draft\n'
+            job_info += 'ExtraInfoKeyValue6=ProjectName=%s\n' % project
+            job_info += 'ExtraInfoKeyValue7=EntityName=%s\n' % task['Asset']
+            job_info += 'ExtraInfoKeyValue8=EntityType=Asset\n'
+            job_info += 'ExtraInfoKeyValue9=DraftType=movie\n'
+            job_info += 'ExtraInfoKeyValue10=VersionId=%s\n'  # Need to have shotgun create a version before hand! Fuck!
+            job_info += 'ExtraInfoKeyValue11=DraftColorSpaceIn=Identity\n'
+            job_info += 'ExtraInfoKeyValue12=DraftColorSpaceOut=Identity\n'
+            job_info += 'ExtraInfoKeyValue13=VersionName=\n'  # Needs to actually be the turntable.main filename
+            job_info += 'ExtraInfoKeyValue14=TaskId=-1\n'
+            job_info += 'ExtraInfoKeyValue15=ProjectId=%s\n' % self.project_id
+            job_info += 'ExtraInfoKeyValue16=DraftUploadToShotgun=True\n'
+            job_info += 'ExtraInfoKeyValue17=TaskName=None\n'
+            job_info += 'ExtraInfoKeyValue18=DraftResolution=1\n'
+            job_info += 'ExtraInfoKeyValue19=EntityId=%s\n'  # Need to get the fuckin' Asset ID
+            job_info += 'ExtraInfoKeyValue20=SubmitQuickDraft=True\n'
+            # End Draft Submission details
             job_info += 'OverrideTaskExtraInfoNames=False\n'
             job_info += 'MachineName=%s\n' % platform.node()
             job_info += 'Plugin=MayaCmd\n'
@@ -1221,7 +1280,8 @@ class LazySiouxsie(QtGui.QWidget):
             plugin_info += 'Camera0=\nCamera1=%s\n' % camera[0]
             plugin_info += 'Camera2=front\nCamera3=persp\nCamera4=side\nCamera5=top\n'
             plugin_info += 'SceneFile=%s\n' % file_name
-            plugin_info += 'IgnoreError211=1'
+            plugin_info += 'IgnoreError211=1\n'
+            plugin_info += 'UseOnlyCommandLineOptions=False\n'
             plugin_info_file.write(plugin_info)
             plugin_info_file.close()
 
