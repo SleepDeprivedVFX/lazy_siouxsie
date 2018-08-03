@@ -453,6 +453,8 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.shadows' % material, 1)
                 cmds.setAttr('%s.affectAlpha' % material, 1)
                 cmds.setAttr('%s.alphaContribution' % material, -1)
+                cmds.setAttr('vraySettings.giOn', 1)
+                cmds.setAttr('vraySettings.cam_overrideEnvtex', 1)
                 cmds.connectAttr('%s.outColor' % file_node, 'vraySettings.cam_envtexBg', f=True)
 
     def setup_rendering_engine(self, renderer=None, render_format=None, task=None, filename=None, cam=None):
@@ -1012,14 +1014,7 @@ class LazySiouxsie(QtGui.QWidget):
         height = (y_max - y_min)
         width = (x_max - x_min)
         depth = (z_max - z_min)
-        # The following lines may not be needed, or may only be needed with Arnold (which doesn't make much sense)
-        # base = float(math.sqrt((width ** 2) + (depth ** 2)))
-        # if width > depth:
-        #     alto = float(math.sqrt((width ** 2) + (height ** 2)))
-        # else:
-        #     alto = float(math.sqrt((depth ** 2) + (height **2)))
-        # if (alto * 0.667) > base:
-        #     max_hypotenuse *= (aspect_ratio * 0.667)
+
         logger.debug('Set base frame width...')
         half_width = max_hypotenuse / 2
         # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view
@@ -1069,6 +1064,9 @@ class LazySiouxsie(QtGui.QWidget):
         for camera in cameras:
             if camera == cam[0]:
                 cmds.setAttr('%s.renderable' % camera, 1)
+                cmds.setAttr('%s.translate' % camera, lock=True)
+                cmds.setAttr('%s.rotate' % camera, lock=True)
+                cmds.setAttr('%s.scale' % camera, lock=True)
             else:
                 cmds.setAttr('%s.renderable' % camera, 0)
         logger.info('Camera setup complete!')
