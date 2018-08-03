@@ -38,6 +38,7 @@ from datetime import datetime
 # the code will be compatible with both PySide and PyQt.
 from sgtk.platform.qt import QtCore, QtGui
 from .ui.lazy_siouxsie_ui import Ui_lazySiouxsie
+logger = sgtk.platform.get_logger(__name__)
 
 def show_dialog(app_instance):
     """
@@ -89,6 +90,21 @@ class LazySiouxsie(QtGui.QWidget):
             'vrst': 'vrst',
             'exr(deep)': 'exr(deep)'
         }
+        self.light_types = [
+            'aiAreaLight',
+            'aiSkyDomeLight',
+            'aiMeshLight',
+            'aiPhotometricLight',
+            'aiLightPortal',
+            'aiPhysicalSky',
+            'VRayGeoSun',
+            'VRaySunShape',
+            'VRaySunTarget',
+            'VRayLightIESShape',
+            'VRayLightRectShape',
+            'VRayLightDomeShape',
+            'VRayLightSphereShape'
+        ]
 
         # now load in the UI that was created in the UI designer
         self.ui = Ui_lazySiouxsie()
@@ -97,6 +113,7 @@ class LazySiouxsie(QtGui.QWidget):
         # most of the useful accessors are available through the Application class instance
         # it is often handy to keep a reference to this. You can get it via the following method:
         self._app = sgtk.platform.current_bundle()
+        logger.info('Starting Lazy Siouxsie!')
 
         # Connect to Deadline
         os_sys = platform.system()
@@ -111,9 +128,22 @@ class LazySiouxsie(QtGui.QWidget):
         deadline_connection = self._app.get_setting('deadline_connection')
         deadline_port = int(self._app.get_setting('deadline_port'))
         self.dl = connect.DeadlineCon(deadline_connection, deadline_port)
+        logger.debug('Deadline Connection made!')
 
         self.turntable_task = self._app.get_setting('turntable_task')
         self.render_format = self._app.get_setting('output_format')
+        logger.debug('Collected Turntable Configuration Settings.')
+
+        self.ground_plane = None
+        self.scene_lights = None
+        self.scene_selection = cmds.ls(sl=True)
+        self.has_lights = self.check_scene_lights()
+        logger.debug('Preforming Flight Precheck...')
+        self.preflight_check = self.do_preflight_check()
+        if not self.preflight_check:
+            self.ui.spin_btn.setEnabled(False)
+            self.ui.status_label.setStyleSheet('color: rgb(255, 0, 0);')
+        logger.debug('Precheck complete.')
 
         engine = self._app.engine
         self.sg = engine.sgtk
@@ -123,6 +153,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.entity = self.context.entity['type']
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
+        logger.debug('Shotgun context collected.')
 
         filters = [
             ['id', 'is', self.project_id]
@@ -145,8 +176,9 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.res_height.setText(resolution_height)
         self.ui.pixel_aspect.setText(pixel_aspect)
         self.ui.rendering_engine.setCurrentText(renderers)
-
         hdri_path = self._app.get_setting('hdri_path')
+        logger.debug('Shotgun Render Settings Collected.')
+
         if os.path.exists(hdri_path):
             self.hdri_path = hdri_path
             files = os.listdir(hdri_path)
@@ -171,6 +203,12 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.startFrame.valueChanged.connect(self.set_frames)
         self.ui.endFrame.valueChanged.connect(self.set_frames)
         self.ui.render_format.setCurrentText(self.render_format)
+        self.ui.scene_lights.clicked.connect(self.scene_lights_checkbox)
+        self.ui.full_circle.clicked.connect(self.set_range)
+        self.ui.partial_circle.clicked.connect(self.set_range)
+        self.ui.from_range.setEnabled(False)
+        self.ui.to_range.setEnabled(False)
+        logger.debug('Tool setup complete!')
 
     def set_frames(self):
         start = self.ui.startFrame.value()
@@ -178,6 +216,14 @@ class LazySiouxsie(QtGui.QWidget):
         dif = (end - start) + 1
         total_frames = dif * 2
         self.ui.total_frames.setText(str(total_frames))
+
+    def set_range(self):
+        if self.ui.full_circle.isChecked():
+            self.ui.from_range.setEnabled(False)
+            self.ui.to_range.setEnabled(False)
+        else:
+            self.ui.from_range.setEnabled(True)
+            self.ui.to_range.setEnabled(True)
 
     def cancel(self):
         self.close()
@@ -196,12 +242,35 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(8)
             self.ui.status_label.setText('Getting HDRI Selections...')
             selected_hdri = self.get_hdri_files()
-            # Setup the camera bit
+
+            # Temporarily hide all lights
+            if self.scene_lights:
+                cmds.hide(self.scene_lights)
+
+            # Select and group the set
             self.ui.build_progress.setValue(10)
+            self.ui.status_label.setText('Selecting scene geometry...')
+            geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+            for g in geo:
+                if 'ground' in g.lower():
+                    geo.remove(g)
+                    cmds.select(g, r=True)
+                    cmds.hide()
+            cmds.select(geo, r=True)
+            z = 1
+            while z < 100:
+                cmds.pickWalk(d='up')
+                z += 1
+            self.ui.build_progress.setValue(12)
+            self.ui.status_label.setText('Grouping the geometry...')
+            group = cmds.group(n='_Turntable_Set_Prep')
+
+            # Setup the camera bit
+            self.ui.build_progress.setValue(14)
             self.ui.status_label.setText('Building the Turntable Camera...')
             start = self.ui.startFrame.value()
             end = self.ui.endFrame.value()
-            camera_data = self.build_camera(start=start, end=end)
+            camera_data = self.build_camera(start=start, end=end, group=group)
             camera = camera_data[0]
             center = camera_data[1]
             bb = camera_data[2]
@@ -228,16 +297,25 @@ class LazySiouxsie(QtGui.QWidget):
             # This will need some major renumbering
             self.ui.build_progress.setValue(36)
             self.ui.status_label.setText('Get scene lighting requirements...')
+            # Restore lights
+            if self.scene_lights:
+                cmds.showHidden(self.scene_lights)
+
             use_scene_lighting = self.ui.scene_lights.isChecked()
-            if use_scene_lighting:
+            if use_scene_lighting and self.has_lights:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Get Scene Lights...')
-                get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group, center=center)
+                self.animate_dome(trans=get_scene_lights[1], start=end, end=extended_end)
+            elif not use_scene_lighting and self.has_lights:
+                self.ui.build_progress.setValue(37)
+                self.ui.status_label.setText('Packing Artist Lights...')
+                get_scene_lights = self.get_scene_lights(renderer=rendering_engine, group=group, center=center)
             else:
                 self.ui.build_progress.setValue(37)
                 self.ui.status_label.setText('Ignoring scene lights...')
                 # Once this is rewritten, this should = None
-                get_scene_lights = self.get_scene_lights(renderer=rendering_engine)
+                get_scene_lights = [[], '']
 
             self.ui.build_progress.setValue(40)
             self.ui.status_label.setText('Build HDRI dome...')
@@ -253,6 +331,11 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(51)
             self.ui.status_label.setText('Check groundplane setting...')
+            # Reset the artists ground plane
+            if self.ground_plane:
+                cmds.select(self.ground_plane, r=True)
+                cmds.showHidden(self.ground_plane)
+            # Check for the auto-ground plane
             ground = self.ui.ground_plane.isChecked()
             ground_plane = None
             if ground:
@@ -315,8 +398,9 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(62)
             self.ui.status_label.setText('Begin Layers Setup...')
-            self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane, light_trans=light_trans,
-                                     hdri_list=selected_hdri, lights=get_scene_lights, balls=spheres)
+            layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane,
+                                              light_trans=light_trans, hdri_list=selected_hdri,
+                                              lights=get_scene_lights[0], light_grp=get_scene_lights[1],  balls=spheres)
 
             self.ui.build_progress.setValue(68)
             self.ui.status_label.setText('Setting render settings...')
@@ -324,23 +408,31 @@ class LazySiouxsie(QtGui.QWidget):
             self.setup_rendering_engine(renderer=rendering_engine, render_format=self.render_format,
                                         task=self.turntable_task, filename=next_file, cam=camera)
             # Send to the farm.
-
-            self.ui.build_progress.setValue(76)
-            self.ui.status_label.setText('Creating Deadline Job...')
-            self.submit_to_deadlin(start=start, end=extended_end, renderer=rendering_engine, camera=camera)
+            send_to_deadline = self.ui.submit_to_deadline.isChecked()
+            if send_to_deadline:
+                self.ui.build_progress.setValue(76)
+                self.ui.status_label.setText('Creating Deadline Job...')
+                self.submit_to_deadline(start=start, end=extended_end, renderer=rendering_engine, camera=camera,
+                                        layers=layers)
 
             # Finalizing
             self.ui.build_progress.setValue(96)
             self.ui.status_label.setText('Saving Turntable file...')
             cmds.file(s=True)
-            self.ui.build_progress.setValue(99)
-            self.ui.status_label.setText('Reopening the main file...')
-            file_to_return = self.ui.file_path.text()
-            cmds.file(file_to_return, o=True)
-            self.ui.build_progress.setValue(100)
-            self.ui.status_label.setText('Done!')
+            if self.ui.open_turntable.isChecked():
+                self.ui.build_progress.setValue(100)
+                self.ui.status_label.setText('Done!')
+            else:
+                self.ui.build_progress.setValue(99)
+                self.ui.status_label.setText('Reopening the main file...')
+                file_to_return = self.ui.file_path.text()
+                cmds.file(file_to_return, o=True)
+                self.ui.build_progress.setValue(100)
+                self.ui.status_label.setText('Done!')
             sleep(3)
             self.cancel()
+            if self.scene_selection:
+                cmds.select(self.scene_selection, r=True)
 
     def texture_ground(self, ground=None, renderer=None, file_node=None):
         if ground:
@@ -412,7 +504,7 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('vraySettings.pixelAspect', float(pixel_aspect))
 
                 output = render_format.lower()
-                cmds.setAttr('vraySettings.imageFormatStr', self.vrayImageFormats[output], type='string')
+                cmds.setAttr('vraySettings.imageFormatStr', self.vray_formats[output], type='string')
 
                 self.ui.build_progress.setValue(74)
                 self.ui.status_label.setText('Calculating quality settings...')
@@ -437,12 +529,13 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.status_label.setText('Setting render quality...')
                 cmds.setAttr('vraySettings.samplerType', 4)
                 cmds.setAttr('vraySettings.minShadeRate', quality)
+                cmds.setAttr('vraySettings.giOn', 1)
+                cmds.setAttr('vraySettings.cam_overrideEnvtex', 1)
                 cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
                 cmds.setAttr('vraySettings.dmcMaxSubdivs', dmc_maxSubDivs)
                 cmds.setAttr('vraySettings.dmcThreshold', dmc_threshold)
                 cmds.setAttr('vraySettings.dmcs_adaptiveAmount', adaptive_amount)
                 cmds.setAttr('vraySettings.dmcs_adaptiveThreshold', adaptive_threshold)
-                cmds.setAttr('vraySettings.giOn', 1)
 
             elif renderer == 'arnold':
                 self.ui.build_progress.setValue(69)
@@ -619,39 +712,14 @@ class LazySiouxsie(QtGui.QWidget):
         return hdri_files
 
     def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
-                            lights=[], balls=[]):
-
+                            lights=[], light_grp=None, balls=[]):
+        layers = []
         self.ui.build_progress.setValue(63)
         self.ui.status_label.setText('Setting up render layers...')
         rs = renderSetup.instance()
         default_render_layer = rs.getDefaultRenderLayer()
         default_render_layer.setRenderable(False)
         # lights = list(lights)
-
-        if lights:
-            # TODO: Eventually, I need to get this working. For now it is disabled, but will hide all the lights.
-
-            # render_layer = rs.createRenderLayer('Artist_Lights')
-            # collection_set = render_layer.createCollection('geo')
-            # collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s' % ground)
-            # light_collection = render_layer.createCollection('artist_lights')
-            # light_list = ''
-            # for light in lights:
-            #     light_list += '%s, ' % light
-            # light_collection.getSelector().setPattern(light_list)
-            # light_collection.setSelectorType('Lights')
-
-            # light_collection.getSelector().set
-            # light_collection.
-            for light in lights:
-                cmds.select(light, r=True)
-                cmds.hide()
-            # rs.switchToLayer(render_layer)
-            # for light in lights:
-            # utils.createAbsoluteOverride(light, 'visibility')
-            #
-            # cmds.setAttr('visibility.attrValue', 1)
-            # cmds.select(light, r=True)
 
         self.ui.build_progress.setValue(64)
         self.ui.status_label.setText('Collecting Turntable Geo...')
@@ -669,48 +737,123 @@ class LazySiouxsie(QtGui.QWidget):
                 basename = os.path.basename(hdri)
                 base = os.path.splitext(basename)[0]
                 render_layer = rs.createRenderLayer(base)
+                layers.append(base)
                 collection_set = render_layer.createCollection('Scene_%s' % base)
                 collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
-        rs.switchToLayer(None)
 
-    def get_scene_lights(self, renderer=None):
+                if lights:
+                    utils.createAbsoluteOverride(light_trans, 'visibility')
+                    cmds.select(light_trans, r=True)
+                    cmds.setAttr('%s.visibility' % light_trans, 1)
+                    utils.createAbsoluteOverride(light_grp, 'visibility')
+                    cmds.select(light_grp, r=True)
+                    cmds.setAttr('%s.visibility' % light_grp, 0)
+
+        if lights and self.ui.scene_lights.isChecked():
+            render_layer = rs.createRenderLayer('Artist_Lights')
+            collection_set = render_layer.createCollection('geo')
+            collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
+            light_collection = render_layer.createCollection('artist_lights')
+            light_list = ''
+            for light in lights:
+                light_list += '%s, ' % light
+            light_collection.getSelector().setPattern(light_list)
+            rs.switchToLayer(render_layer)
+            utils.createAbsoluteOverride(light_trans, 'visibility')
+            cmds.setAttr('%s.visibility' % light_trans, 0)
+            utils.createAbsoluteOverride(light_grp, 'visibility')
+            cmds.select(light_grp, r=True)
+            cmds.setAttr('%s.visibility' % light_grp, 1)
+        elif lights and not self.ui.scene_lights.isChecked():
+            cmds.select(light_grp, r=True)
+            cmds.setAttr('%s.visibility' % light_grp, 0)
+
+        rs.switchToLayer(None)
+        return layers
+
+    def check_scene_lights(self):
         lights = []
-        if renderer == 'arnold':
-            self.ui.build_progress.setValue(38)
-            self.ui.status_label.setText('Getting Arnold Lights...')
-            light_types = ['aiAreaLight', 'aiSkyDomeLight', 'aiMeshLight', 'aiPhotometricLight', 'aiLightPortal',
-                           'aiPhysicalSky']
-            for light in light_types:
-                type_list = cmds.ls(type=light)
-                for t in type_list:
-                    lights.append(t)
-        elif renderer == 'vray':
-            # Figure out the vray code...
-            pass
-        elif renderer == 'redshift':
-            # Figure out RedShift code
-            pass
-        elif renderer == 'renderman':
-            # Figure out RedShift code
-            pass
-        elif renderer == 'mayasoftware':
-            pass
+        light_types = self.light_types
+        for light in light_types:
+            type_list = cmds.ls(type=light)
+            for t in type_list:
+                lights.append(t)
+        maya_light_types = cmds.ls(lights=True)
+        for light in maya_light_types:
+            lights.append(light)
+        if lights:
+            self.ui.scene_lights.setChecked(True)
+            self.ui.status_label.setText('Lights in the Scene!')
+            logger.info('This scene has lights in it.  Use Scene Lights has been turned on.')
+            self.scene_lights = lights
+            self.ui.build_progress.setValue(0)
+            return True
+        self.ui.scene_lights.setChecked(False)
+        self.ui.status_label.setText('No lights found in scene')
+        self.ui.build_progress.setValue(0)
+        return False
+
+    def scene_lights_checkbox(self):
+        if not self.has_lights:
+            self.ui.scene_lights.setChecked(False)
+
+
+    def get_scene_lights(self, renderer=None, group=None, center=None):
+        logger.debug('Begin packing scene lights.')
+        lights = []
+        self.ui.build_progress.setValue(38)
+        self.ui.status_label.setText('Getting Lights...')
+        light_types = self.light_types
+
+        logger.debug('Checking for known light types...')
+        for light in light_types:
+            type_list = cmds.ls(type=light)
+            for t in type_list:
+                lights.append(t)
 
         self.ui.build_progress.setValue(39)
         self.ui.status_label.setText('getting Maya Lights...')
         for light in cmds.ls(lt=True):
             lights.append(light)
-        return lights
+
+        logger.debug('Lights collected.')
+        light_roots = []
+        if lights:
+            logger.debug('Parsing lights.')
+            for light in lights:
+                cmds.select(light, r=True)
+                i = 0
+                while i < 100:
+                    cmds.pickWalk(d='up')
+                    i += 1
+                if cmds.ls(sl=True)[0] not in light_roots:
+                    light_roots.append(cmds.ls(sl=True)[0])
+            for root in light_roots:
+                if root == group:
+                    light_roots.remove(root)
+            cmds.select(light_roots, r=True)
+        if lights:
+            logger.debug('Grouping Lights...')
+            light_group = cmds.group(n='_turntable_light_group')
+        else:
+            light_group = None
+        if center and light_group:
+            logger.debug('Centering light group pivot')
+            cmds.select(light_group, r=True)
+            cmds.xform(piv=center, ws=True)
+        return [lights, light_group]
 
     def browse(self):
         finder = QtGui.QFileDialog.getOpenFileName(self, filter='HDRI (*.hdr *.exr)')
         if finder:
+            logger.debug('Returning Custom HDRI: %s' % finder[0])
             self.ui.custom_hdri.setText(finder[0])
 
     def get_scene_details(self):
+        logger.debug('Getting scene details from Shotgun...')
         filters = [
             ['name', 'is', self.project]
         ]
@@ -727,6 +870,7 @@ class LazySiouxsie(QtGui.QWidget):
         return info
 
     def find_turntable_task(self):
+        logger.info('Collecting Turntable file name from Shotgun and System...')
         filters = [
             ['entity', 'is', {'type': 'Asset', 'id': self.entity_id}]
         ]
@@ -754,10 +898,11 @@ class LazySiouxsie(QtGui.QWidget):
         tt_path = path.replace(settings['task_name'], self.turntable_task)
         self.ui.build_progress.setValue(3)
         self.ui.status_label.setText('Turntable path: %s' % tt_path)
-        # template = self.sg.templates['maya_asset_work']
+        logger.debug('Find version number...')
         version_pattern = r'(_v\d*|_V\d*)'
         if turntable:
             # Find latest turntable task
+            logger.debug('Turntable task already exists!')
             if os.path.isdir(tt_path):
                 files = glob.glob('%s/*[0-9]*' % tt_path)
                 if files:
@@ -774,13 +919,17 @@ class LazySiouxsie(QtGui.QWidget):
                     next_version_number = str('{n:0{l}d}'.format(n=next_version, l=version_count))
                     version = last_version.replace(version_number, next_version_number)
                     next_file = last_file.replace(last_version, version)
+                    logger.debug('Next filename created!  %s' % next_file)
                 else:
                     next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
+                    logger.debug('First filename created!  %s' % next_file)
             else:
                 os.makedirs(tt_path)
                 next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
+                logger.debug('First filename and folder structure created!  %s' % next_file)
         else:
             # Create Turntable Task
+            logger.info('Creating initial turntable task on Shotgun...')
             filters = [
                 ['code', 'is', 'Turntable']
             ]
@@ -793,30 +942,23 @@ class LazySiouxsie(QtGui.QWidget):
                 'step': {'type': 'Step', 'id': step['id']},
             }
             new_task = self.sg.shotgun.create('Task', task_data)
+            logger.debug('Task created!: %s' % new_task)
             if not os.path.isdir(tt_path):
                 os.makedirs(tt_path)
                 next_file = '%s/%s_%s_v001.mb' % (tt_path, settings['Asset'], self.turntable_task)
+                logger.debug('Task set on Shotgun and new filename and folder structure created! %s' % next_file)
         self.ui.build_progress.setValue(4)
         self.ui.status_label.setText('New Filename: %s' % next_file)
+        logger.info('New Filename: %s' % next_file)
         return next_file
 
-    def build_camera(self, start=1, end=120):
-        # Select and group the set
-        self.ui.build_progress.setValue(12)
-        self.ui.status_label.setText('Selecting scene geometry...')
-        geo = cmds.ls(type=['mesh', 'nurbsSurface'])
-        cmds.select(geo, r=True)
-        z = 30
-        while z < 100:
-            cmds.pickWalk(d='up')
-            z += 1
-        self.ui.build_progress.setValue(14)
-        self.ui.status_label.setText('Grouping the geometry...')
-        cmds.group(n='_Turntable_Set_Prep')
+    def build_camera(self, start=1, end=120, group=None):
         # Get the set/scene size from the bounding box
-        cmds.select('_Turntable_Set_Prep')
+        logger.info('Building the camera system...')
+        cmds.select(group, r=True)
         self.ui.build_progress.setValue(16)
         self.ui.status_label.setText('Getting scene center point...')
+        logger.debug('Getting scene center point...')
         scene_bb = cmds.xform(q=True, bb=True)
         # Find the center from the bounding box
         x_center = scene_bb[3] - ((scene_bb[3] - scene_bb[0]) / 2)
@@ -824,12 +966,13 @@ class LazySiouxsie(QtGui.QWidget):
         z_center = scene_bb[5] - ((scene_bb[5] - scene_bb[2]) / 2)
         self.ui.build_progress.setValue(18)
         self.ui.status_label.setText('Animating the Set...')
-        cmds.select('_Turntable_Set_Prep', r=True)
+        logger.debug('Animating the set...')
+        cmds.select(group, r=True)
         bb_center = [x_center, y_center, z_center]
         cmds.xform(piv=[x_center, y_center, z_center])
-        cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-25, ott='linear', t=start)
-        cmds.setKeyframe('_Turntable_Set_Prep.ry', v=-385.0, itt='linear', t=end)
+        self.animate_dome(trans=group, start=start, end=end)
         # calculate a new height for the camera based on the bounding box
+        logger.debug('Calculating camera height from bounding box...')
         user_cam_height = self.ui.camera_height.text()
         if user_cam_height != '':
             cam_height = float(user_cam_height) + scene_bb[1]
@@ -838,13 +981,16 @@ class LazySiouxsie(QtGui.QWidget):
         # Create a new camera and fit it to the current view
         self.ui.build_progress.setValue(20)
         self.ui.status_label.setText('Creating camera...')
+        logger.debug('Creating camera...')
         cam = cmds.camera(n='turn_table_cam')
         cmds.lookThru(cam)
         cmds.viewFit()
         self.ui.build_progress.setValue(21)
         self.ui.status_label.setText('Beginning camera position calculations...')
+        logger.info('Beginning camera position calculations...')
         # Get the position of the new camera after placement
         cam_pos = cmds.xform(q=True, ws=True, t=True)
+        logger.debug('Get initial camera position from frame.')
         # Separate out the mins and maxs of the bounding box for triangulation
         self.ui.build_progress.setValue(22)
         x_min = scene_bb[0]
@@ -855,6 +1001,7 @@ class LazySiouxsie(QtGui.QWidget):
         z_max = scene_bb[5]
         # Get the cube root hypotenuse of the bounding box to calculate the overall scene's widest distance
         self.ui.build_progress.setValue(24)
+        logger.info('Calculating maximum scene scale...')
         cube_diff = math.pow((x_max - x_min), 3) + math.pow((y_max - y_min), 3) + math.pow((z_max - z_min), 3)
         max_hypotenuse = cube_diff ** (1. / 3.)
         # Cut the width in half to create a 90 degree angle
@@ -865,11 +1012,19 @@ class LazySiouxsie(QtGui.QWidget):
         height = (y_max - y_min)
         width = (x_max - x_min)
         depth = (z_max - z_min)
-        if height > width and height > depth:
-            max_hypotenuse *= aspect_ratio
+        # The following lines may not be needed, or may only be needed with Arnold (which doesn't make much sense)
+        # base = float(math.sqrt((width ** 2) + (depth ** 2)))
+        # if width > depth:
+        #     alto = float(math.sqrt((width ** 2) + (height ** 2)))
+        # else:
+        #     alto = float(math.sqrt((depth ** 2) + (height **2)))
+        # if (alto * 0.667) > base:
+        #     max_hypotenuse *= (aspect_ratio * 0.667)
+        logger.debug('Set base frame width...')
         half_width = max_hypotenuse / 2
         # Get the horizontal aperture. Only the inch aperture is accessible, so mm aperture and field of view
         # must be calculated from that
+        logger.debug('Get camera aperture and focal length...')
         horizontalApertureInch = cmds.getAttr('%s.horizontalFilmAperture' % cam[1])
         # convert to mm
         horizontalAperture_mm = 2.54 * horizontalApertureInch * 10
@@ -877,16 +1032,19 @@ class LazySiouxsie(QtGui.QWidget):
         focalLength = cmds.getAttr('%s.focalLength' % cam[1])
         # Calculate FOV from horizontal aperture and focal length
         self.ui.build_progress.setValue(27)
+        logger.debug('Calculate the FOV...')
         fov = math.degrees(2 * math.atan(horizontalAperture_mm / (focalLength * 2)))
         # Cut the FOV in half to get angle of right angle.
         half_angle = fov / 2
         # Calculate the distance for the camera
         self.ui.build_progress.setValue(28)
+        logger.info('Calculating the camera distance...')
         angle_tan = math.tan(half_angle)
         distance = cam_pos[2] - (half_width / angle_tan)
         # Set the new camera distance and height
         self.ui.build_progress.setValue(29)
         self.ui.status_label.setText('Adjusting camera position...')
+        logger.debug('Repositioning camera...')
         cmds.setAttr('%s.ty' % cam[0], cam_height)
         cmds.setAttr('%s.tz' % cam[0], distance)
         # Get the new camera position
@@ -894,6 +1052,7 @@ class LazySiouxsie(QtGui.QWidget):
         # Calculate the decension angle from the center of the scene to the new camera position
         self.ui.build_progress.setValue(30)
         self.ui.status_label.setText('Adjusting camera angle...')
+        logger.info('Calculating the camera angle...')
         cam_height = new_cam_pos[1] - bb_center[1]
         cam_dist = new_cam_pos[2] - bb_center[2]
         cam_angle = -1 * (math.degrees(math.atan(cam_height / cam_dist)))
@@ -902,83 +1061,45 @@ class LazySiouxsie(QtGui.QWidget):
         # Group the camera, center the pivot, and animate the rotation
 
         self.ui.build_progress.setValue(32)
-        self.ui.status_label.setText('Animating the camera...')
+        self.ui.status_label.setText('Grouping the camera setup...')
+        logger.debug('Grouping the camera setup...')
         cmds.group(n='_turntable_cam')
         cameras = cmds.listCameras(p=True, o=True)
+        logger.debug('Set camera renderabilities for all cameras...')
         for camera in cameras:
             if camera == cam[0]:
                 cmds.setAttr('%s.renderable' % camera, 1)
             else:
                 cmds.setAttr('%s.renderable' % camera, 0)
+        logger.info('Camera setup complete!')
         return [cam, bb_center, scene_bb, max_hypotenuse]
 
     def animate_dome(self, trans=None, start=None, end=None):
+        logger.info('Animating %s...' % trans)
+        rot_range_type = self.ui.full_circle.isChecked()
+        if rot_range_type:
+            start_angle = 25.0
+            end_angle = -385.0
+        else:
+            start_angle = float(self.ui.from_range.text())
+            end_angle = float(self.ui.to_range.text())
+            print start_angle
+            print end_angle
         if trans:
-            cmds.setKeyframe('%s.ry' % trans, v=25, ott='linear', t=start)
-            cmds.setKeyframe('%s.ry' % trans, v=-385.0, itt='linear', t=end)
+            cmds.setKeyframe('%s.ry' % trans, v=start_angle, ott='linear', t=start)
+            cmds.setKeyframe('%s.ry' % trans, v=end_angle, itt='linear', t=end)
 
-    def submit_to_deadlin(self, start=1, end=144, renderer=None, width=None, height=None, camera=None):
-        '''
-        I'll need a command line string with all the settings.  It will then be placed into something like this:
-        batch_string = str('mayabatch -file %s -command "%s"' % (self.file_path, str(command_string)))
-        I'll need to use list_deadline_pools to find the VRay or Arnold pool and
-        That will then be packed into a couple of Deadline documents, a JobInfo file and a PluginInfoFile that
-        will then be sent using something like this:
-        submitted = self.dl.Jobs.SubmitJobFiles(jobInfo, PluginInfo, idOnly=True)
-        That should be it.
-
-        Name=BE_4700_lookdev.main_v037 - BE_4700_shotCam1:shotCam1
-        UserName=matt
-        Region=none
-        Comment=Ramp Reveals 1075x858
-        Frames=1001-1185
-        Pool=vrscene
-        Priority=85
-        Blacklist=
-        MachineLimit=4
-        ScheduledStartDateTime=02/07/2018 11:44
-        OverrideTaskExtraInfoNames=False
-        MachineName=DESKTOP-FERDJRG
-        Plugin=MayaCmd
-        OutputDirectory0=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700/publish/renders/BE_4700_shotCam1_shotCam1
-        OutputFilename0=BE_4700_lookdev.main_v037.####.exr
-        EventOptIns=
-
-        NEED TO SETUP RENDER LAYER TEST FOR FULL FUNCTIONALITY!!!
-
-        Example Plugin
-
-        UseLegacyRenderLayers=0
-        Build=64bit
-        ProjectPath=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700
-        CommandLineOptions=
-        ImageWidth=1075
-        ImageHeight=858
-        OutputFilePath=//hal/jobs/xmen_kurt/ep/101/XSK101/BE_4700/publish/renders/
-        OutputFilePrefix=<Camera>/BE_4700_lookdev.main_v037
-        Camera=BE_4700_shotCam1:shotCam1
-        Camera0=
-        Camera1=BE_4700_shotCam1:shotCam1
-        Camera2=BE_4700_shotCam2:shotCam1
-        Camera3=front
-        Camera4=persp2
-        Camera5=persp
-        Camera6=persp1
-        Camera7=side
-        Camera8=top
-        IgnoreError211=1
-        :return:
-        '''
-
+    def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
+        logger.info('Submitting to Deadline...')
         self.ui.build_progress.setValue(77)
         self.ui.status_label.setText('Collect Deadline Pools...')
+        logger.debug('Collecting the Deadline Pools...')
         all_pools = self.list_deadline_pools()
         ext = self.ui.render_format.currentText()
 
         self.ui.build_progress.setValue(78)
         self.ui.status_label.setText('Setup Deadline Environments and Datetime...')
-        job_info = ''
-        plugin_info = ''
+        logger.debug('Setup Deadline Environment and Datetime...')
         file_name = cmds.file(q=True, sn=True)
         file_path = os.path.dirname(file_name)
         path_settings = self.sg.templates['maya_asset_work']
@@ -990,155 +1111,205 @@ class LazySiouxsie(QtGui.QWidget):
         #  'extension': u'mb'}
         output_path = '%s/publish/renders/' % proj_root
         version = task['version']
-        output_file = '%s.####.%s' % (base_name, ext)
-        prefix = '%s/v%03d/%s' % (task['task_name'], version, base_name)
-        # Path to Deadline Job Files
-        job_path = os.environ['TEMP'] + '\\_job_submissions'
-        if not os.path.exists(job_path):
-            os.mkdir(job_path)
-        h = datetime.now().hour
-        m = datetime.now().minute
-        s = datetime.now().second
-        h = '%02d' % h
-        m = '%02d' % m
-        s = '%02d' % s
-        D = datetime.now().day
-        D = '%02d' % D
-        M = datetime.now().month
-        M = '%02d' % M
-        Y = datetime.now().year
-        d = '%s-%s-%s' % (D, M, Y)
-        d_flat = str(d).replace('-', '')
-        ji_filename = '%s_%s%s%s%s_jobInfo.job' % (base_name, d_flat, h, m, s)
-        ji_filepath = job_path + '\\' + ji_filename
-        pi_filename = '%s_%s%s%s%s_pluginInfo.job' % (base_name, d_flat, h, m, s)
-        pi_filepath = job_path + '\\' + pi_filename
-        job_info_file = open(ji_filepath, 'w+')
-        plugin_info_file = open(pi_filepath, 'w+')
+        t = 0
+        logger.info('Parsing Render Layers into Render Jobs...')
+        for layer in layers:
+            lyr = str(layer)
+            job_info = ''
+            plugin_info = ''
+            job_path = os.environ['TEMP'] + '\\_job_submissions'
+            logger.debug('Checking job submission path...')
+            if not os.path.exists(job_path):
+                os.mkdir(job_path)
+            logger.debug('Setting Job date and time...')
+            h = datetime.now().hour
+            m = datetime.now().minute
+            s = datetime.now().second
+            h = '%02d' % h
+            m = '%02d' % m
+            s = '%02d' % s
+            D = datetime.now().day
+            D = '%02d' % D
+            M = datetime.now().month
+            M = '%02d' % M
+            Y = datetime.now().year
+            d = '%s-%s-%s' % (D, M, Y)
+            d_flat = str(d).replace('-', '')
+            logger.debug('Creating job and plugin files...')
+            ji_filename = '%s_%s%s%s%s%s_jobInfo.job' % (base_name, d_flat, h, m, s, t)
+            ji_filepath = job_path + '\\' + ji_filename
+            pi_filename = '%s_%s%s%s%s%s_pluginInfo.job' % (base_name, d_flat, h, m, s, t)
+            pi_filepath = job_path + '\\' + pi_filename
+            job_info_file = open(ji_filepath, 'w+')
+            plugin_info_file = open(pi_filepath, 'w+')
 
-        # Setup JobInfo
-        user_name = os.environ['USERNAME']
-        frames = '%s-%s' % (start, end)
-        pool = None
-        for p in all_pools:
-            if renderer in p:
-                pool = p
-                break
+            # Setup JobInfo
+            logger.debug('Collecting user, resolution, frames and pool data...')
+            user_name = os.environ['USERNAME']
+            frames = '%s-%s' % (start, end)
+            pool = None
+            for p in all_pools:
+                if renderer in p:
+                    pool = p
+                    break
 
-        resolutionWidth = int(self.ui.res_width.text())
-        resolutionHeight = int(self.ui.res_height.text())
-        resolution_scale = self.ui.res_scale.currentText()
-        resolution_scale = float(resolution_scale.strip('%'))
-        resolution_scale /= 100
-        resolutionHeight *= resolution_scale
-        resolutionWidth *= resolution_scale
+            resolutionWidth = int(self.ui.res_width.text())
+            resolutionHeight = int(self.ui.res_height.text())
+            resolution_scale = self.ui.res_scale.currentText()
+            resolution_scale = float(resolution_scale.strip('%'))
+            resolution_scale /= 100
+            resolutionHeight *= resolution_scale
+            resolutionWidth *= resolution_scale
 
-        self.ui.build_progress.setValue(79)
-        self.ui.status_label.setText('Create Job Info File...')
-        job_info += 'Name=%s\n' % base_name
-        job_info += 'UserName=%s\n' % user_name
-        job_info += 'Region=none\n'
-        job_info += 'Comment=Lazy Siouxsie Automatic Turntable\n'
-        job_info += 'Frames=%s\n' % frames
-        job_info += 'ChunkSize=1000000\n'
-        job_info += 'Pool=%s\n' % pool
-        job_info += 'Priority=65\n'
-        job_info += 'Blacklist=\n'
-        job_info += 'MachineLimit=5\n'
-        job_info += 'ScheduledStartDateTime=%s/%s/%s %s:%s\n' % (D, M, Y, h, m)
-        job_info += 'ExtraInfo0=%s\n' % task['task_name']
-        job_info += 'ExtraInfo1=%s\n' % project
-        job_info += 'ExtraInfo2=%s\n' % task['Asset']
-        job_info += 'ExtraInfo3=%s\n' % base_name
-        job_info += 'ExtraInfo4=Lazy Siouxsie Turntable\n'
-        job_info += 'ExtraInfo5=%s\n' % user_name
-        job_info += 'OverrideTaskExtraInfoNames=False\n'
-        job_info += 'MachineName=%s\n' % platform.node()
-        job_info += 'Plugin=MayaCmd\n'
-        job_info += 'OutputDirectory0=%s<RenderLayer>/%s/v%03d\n' % (output_path, task['task_name'], version)
-        job_info += 'OutputFilename0=%s\n' % output_file
-        job_info += 'EventOptIns='
-        job_info_file.write(job_info)
-        job_info_file.close()
+            self.ui.build_progress.setValue(79)
+            self.ui.status_label.setText('Create Job Info File...')
+            logger.debug('Creating Job Info File...')
+            job_info += 'Name=%s - %s\n' % (base_name, lyr)
+            job_info += 'BatchName=%s\n' % base_name
+            job_info += 'UserName=%s\n' % user_name
+            job_info += 'Region=none\n'
+            job_info += 'Comment=Lazy Siouxsie Automatic Turntable\n'
+            job_info += 'Frames=%s\n' % frames
+            job_info += 'Pool=%s\n' % pool
+            job_info += 'Priority=65\n'
+            job_info += 'Blacklist=\n'
+            job_info += 'MachineLimit=5\n'
+            job_info += 'ScheduledStartDateTime=%s/%s/%s %s:%s\n' % (D, M, Y, h, m)
+            job_info += 'ExtraInfo0=%s\n' % task['task_name']
+            job_info += 'ExtraInfo1=%s\n' % project
+            job_info += 'ExtraInfo2=%s\n' % task['Asset']
+            job_info += 'ExtraInfo3=%s\n' % base_name
+            job_info += 'ExtraInfo4=Lazy Siouxsie Turntable\n'
+            job_info += 'ExtraInfo5=%s\n' % user_name
+            job_info += 'OverrideTaskExtraInfoNames=False\n'
+            job_info += 'MachineName=%s\n' % platform.node()
+            job_info += 'Plugin=MayaCmd\n'
+            output_file = '%s_%s.####.%s' % (layer, base_name, ext)
+            output_directory = '%s%s/%s/v%03d' % (output_path, task['task_name'], layer, version)
+            # output_directory = output_directory.replace('/', '\\')
+            job_info += 'OutputDirectory0=%s\n' % output_directory
+            job_info += 'OutputFilename0=%s\n' % output_file
+            job_info += 'EventOptIns='
+            job_info_file.write(job_info)
+            job_info_file.close()
 
-        # Setup PluginInfo
-        self.ui.build_progress.setValue(80)
-        self.ui.status_label.setText('Build Plugin Info File...')
-        plugin_info += 'Animation=1\n'
-        plugin_info += 'Renderer=%s\n' % renderer
-        plugin_info += 'UsingRenderLayers=1\n'
-        plugin_info += 'RenderLayer=\n'
-        plugin_info += 'RenderHalfFrames=0\n'
-        plugin_info += 'FrameNumberOffset=0\n'
-        plugin_info += 'LocalRendering=0\n'
-        plugin_info += 'StrictErrorChecking=0\n'
-        plugin_info += 'MaxProcessors=0\n'
-        plugin_info += 'Version=%s\n' % cmds.about(q=True, v=True)
-        plugin_info += 'UsingLegacyRenderLayers=0\n'
-        if cmds.about(q=True, w64=True):
-            win = '64bit'
-        else:
-            win = '32bit'
-        plugin_info += 'Build=%s\n' % win
-        plugin_info += 'ProjectPath=%s\n' % proj_root
-        plugin_info += 'CommandLineOptions=\n'
-        plugin_info += 'ImageWidth=%s\n' % resolutionWidth
-        plugin_info += 'ImageHeight=%s\n' % resolutionHeight
-        plugin_info += 'OutputFilePath=%s\n' % output_path
-        plugin_info += 'OutputFilePrefix=%s\n' % prefix
-        plugin_info += 'Camera=%s\n' % camera[0]
-        plugin_info += 'Camera0=\nCamera1=%s\n' % camera[0]
-        plugin_info += 'Camera2=front\nCamera3=persp\nCamera4=side\nCamera5=top\n'
-        plugin_info += 'SceneFile=%s\n' % file_name
-        plugin_info += 'IgnoreError211=1'
-        plugin_info_file.write(plugin_info)
-        plugin_info_file.close()
+            # Setup PluginInfo
+            self.ui.build_progress.setValue(80)
+            self.ui.status_label.setText('Build Plugin Info File...')
+            logger.debug('Creating PluginInfo file...')
+            plugin_info += 'Animation=1\n'
+            plugin_info += 'Renderer=%s\n' % renderer
+            plugin_info += 'UsingRenderLayers=1\n'
+            plugin_info += 'RenderLayer=\n'
+            plugin_info += 'RenderHalfFrames=0\n'
+            plugin_info += 'FrameNumberOffset=0\n'
+            plugin_info += 'LocalRendering=0\n'
+            plugin_info += 'StrictErrorChecking=0\n'
+            plugin_info += 'MaxProcessors=0\n'
+            plugin_info += 'Version=%s\n' % cmds.about(q=True, v=True)
+            plugin_info += 'UsingLegacyRenderLayers=0\n'
+            if cmds.about(q=True, w64=True):
+                win = '64bit'
+            else:
+                win = '32bit'
+            plugin_info += 'Build=%s\n' % win
+            plugin_info += 'ProjectPath=%s\n' % proj_root
+            plugin_info += 'CommandLineOptions=\n'
+            plugin_info += 'ImageWidth=%s\n' % resolutionWidth
+            plugin_info += 'ImageHeight=%s\n' % resolutionHeight
+            plugin_info += 'OutputFilePath=%s\n' % output_path
+            plugin_info += 'OutputFilePrefix=\n'
+            plugin_info += 'Camera=%s\n' % camera[0]
+            plugin_info += 'Camera0=\nCamera1=%s\n' % camera[0]
+            plugin_info += 'Camera2=front\nCamera3=persp\nCamera4=side\nCamera5=top\n'
+            plugin_info += 'SceneFile=%s\n' % file_name
+            plugin_info += 'IgnoreError211=1'
+            plugin_info_file.write(plugin_info)
+            plugin_info_file.close()
 
-        self.ui.build_progress.setValue(81)
-        self.ui.status_label.setText('Getting slice status. Ignore 0 degrees...')
-        degree_slice = self.ui.render_slices.currentText()
-        degree = float(degree_slice)
-        frame_range = float(end - start + 1)
-        slice_mult = frame_range / 360.00
-        slice_frames = int(slice_mult * degree)
-        slice_frame = 0
-        try:
-            self.ui.build_progress.setValue(82)
-            self.ui.status_label.setText('Submitting the Job to Deadline...')
-            submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+            self.ui.build_progress.setValue(81)
+            self.ui.status_label.setText('Getting slice status. Ignore 0 degrees...')
+            logger.debug('Getting slice status.  Ignoring 0 degrees...')
+            degree_slice = self.ui.render_slices.currentText()
+            degree = float(degree_slice)
+            frame_range = float(end - start + 1)
+            slice_mult = (frame_range/2) / 360.00
+            slice_frames = int(slice_mult * degree)
+            slice_frame = 0
+            try:
+                self.ui.build_progress.setValue(82)
+                self.ui.status_label.setText('Submitting the Job to Deadline...')
+                logger.info('Submitting the job to Deadline...')
+                submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, idOnly=True)
+                # TODO: The following example is the basic idea behind submitting the python file:
+                # submitted = self.dl.Jobs.SubmitJobFiles(ji_filepath, pi_filepath, aux=[pythonFile], idOnly=True)
+                # How that's fully implemented remains to be figured out.
 
-            # Setup slice conditions here, to then suspend specific job tasks.
-            if submitted and degree != 0:
-                self.ui.build_progress.setValue(83)
-                self.ui.status_label.setText('Parsing Slices...')
-                job_id = submitted['_id']
-                tasks = self.dl.Tasks.GetJobTasks(job_id)
-                task_count = len(tasks)
-                task_percent = 12.0 / float(task_count)
-                percent = 84.0
-                task_list = []
-                for task in tasks['Tasks']:
-                    task_id = int(task['TaskID'])
-                    percent += task_percent
-                    if task_id != slice_frame:
-                        self.dl.Tasks.SuspendJobTask(jobId=job_id, taskId=task_id)
-                        task_list.append(task_id)
-                    else:
-                        self.ui.build_progress.setValue(int(percent))
-                        self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
-                        slice_frame += slice_frames
-                if task_list:
-                    self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
-
-        except Exception, e:
-            submitted = False
-            print 'FAILED! %s' % e
+                # Setup slice conditions here, to then suspend specific job tasks.
+                if submitted and degree != 0:
+                    self.ui.build_progress.setValue(83)
+                    self.ui.status_label.setText('Parsing Slices...')
+                    logger.info('Parsing slices....')
+                    job_id = submitted['_id']
+                    tasks = self.dl.Tasks.GetJobTasks(job_id)
+                    task_count = len(tasks)
+                    task_percent = 12.0 / float(task_count)
+                    percent = 84.0
+                    task_list = []
+                    for tsk in tasks['Tasks']:
+                        task_id = int(tsk['TaskID'])
+                        percent += task_percent
+                        if task_id != slice_frame:
+                            task_list.append(task_id)
+                        else:
+                            self.ui.build_progress.setValue(int(percent))
+                            self.ui.status_label.setText('Setting %i Frame to Render...' % task_id)
+                            logger.debug('Rendering frame %s' % task_id)
+                            slice_frame += slice_frames
+                    if task_list:
+                        logger.debug('Suspending non-sliced tasks...')
+                        self.dl.Tasks.SuspendJobTasks(jobId=job_id, taskIds=task_list)
+            except Exception, e:
+                submitted = False
+                logger.error('JOB SUBMISSION FAILED! %s' % e)
+            t += 1
 
     def list_deadline_pools(self):
         try:
             # pools = ['none', 'maya_vray', 'nuke', 'maya_redshift', 'houdini', 'alembics', 'arnold', 'caching']
+            logger.debug('Return Deadline pools.')
             pools = self.dl.Pools.GetPoolNames()
         except Exception:
             pools = []
         return pools
+
+    def do_preflight_check(self):
+        system_parts = [
+            '_Turntable_Set_Prep',
+            '_turntable_cam',
+            'turn_table_cam1',
+            '_HDRI_light',
+            '_turntable_ground_plane',
+            '_turntable_chrome_ball',
+            '_turntable_gray_ball'
+        ]
+        for part in system_parts:
+            if cmds.objExists(part):
+                self.ui.status_label.setText('Turntable parts are already found in the scene! Run from a clean scene.')
+                logger.warning('This scene has previous turntable configuration parts in it.  Open a clean file!')
+                return False
+        file_name = cmds.file(q=True, sn=True)
+        if self.turntable_task in file_name:
+            self.ui.status_label.setText('It looks like this is already a turntable file. Run from a clean scene.')
+            logger.warning('This is already a turntable file, and the setup should already be done.  Try running the '
+                           'tool from a model or lookdev file.')
+            return False
+        all_geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+        for geo in all_geo:
+            if 'ground' in geo.lower():
+                self.ground_plane = geo
+                self.ui.ground_plane.setChecked(False)
+                logger.debug('Ground plane detected.  Turning off auto ground plane.')
+                break
+        return True
 
