@@ -370,7 +370,8 @@ class LazySiouxsie(QtGui.QWidget):
                 # TODO: Need to refigure out how and where to put the chrome balls.  Check Tiger for example
                 self.ui.build_progress.setValue(56)
                 self.ui.status_label.setText('Finding Radius...')
-                base_max_width = math.sqrt((math.pow((x_max - x_min), 2)) + (math.pow((y_max - y_min), 2)))
+                # base_max_width = math.sqrt((math.pow((x_max - x_min), 2)) + (math.pow((y_max - y_min), 2)))
+                base_max_width = scene_max_width
                 sphere_radius = ((y_max - y_min)/2) * 0.25
                 self.ui.build_progress.setValue(58)
                 self.ui.status_label.setText('Making sphers...')
