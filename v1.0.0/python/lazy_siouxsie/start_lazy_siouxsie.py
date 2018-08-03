@@ -153,6 +153,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.entity = self.context.entity['type']
         self.task = self.context.task['name']
         self.entity_id = self.context.entity['id']
+        self.tt_task = None
         logger.debug('Shotgun context collected.')
 
         filters = [
@@ -679,11 +680,14 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setAttr('%s.useDomeTex' % light, 1)
             file_node = cmds.createNode('file')
             cmds.connectAttr('%s.outColor' % file_node, '%s.domeTex' % light, f=True)
-            connections = cmds.listConnections(light)
-            for conn in connections:
-                if cmds.nodeType(conn) == 'VRayPlaceEnvTex':
-                    cmds.setAttr('%s.useTransform' % conn, 1)
-                    break
+
+            vray_shit = cmds.createNode('VRayPlaceEnvTex', n='vray_placement')
+            cmds.connectAttr('%s.outUV' % vray_shit, '%s.uvCoord' % file_node, f=True)
+            cmds.setAttr('%s.useTransform' % vray_shit, 1)
+            cmds.setAttr('%s.mappingType' % vray_shit, 2)
+            vray_sucks = cmds.createNode('place2dTexture', n='because_fucking_vray')
+            cmds.connectAttr('%s.uvCoord' % vray_sucks, '%s.outUV' % vray_shit, f=True)
+
             hdri['dome'] = light
             hdri['file'] = file_node
             hdri['translation'] = light_trans
@@ -893,6 +897,7 @@ class LazySiouxsie(QtGui.QWidget):
             if content == self.turntable_task:
                 turntable = content
                 turntable_id = task_id
+                self.tt_task = task_id
                 break
             else:
                 turntable = None
@@ -944,6 +949,7 @@ class LazySiouxsie(QtGui.QWidget):
                 'step': {'type': 'Step', 'id': step['id']},
             }
             new_task = self.sg.shotgun.create('Task', task_data)
+            self.tt_task = new_task['id']
             logger.debug('Task created!: %s' % new_task)
             if not os.path.isdir(tt_path):
                 os.makedirs(tt_path)
@@ -1087,37 +1093,17 @@ class LazySiouxsie(QtGui.QWidget):
             cmds.setKeyframe('%s.ry' % trans, v=start_angle, ott='linear', t=start)
             cmds.setKeyframe('%s.ry' % trans, v=end_angle, itt='linear', t=end)
 
-    def create_draft_version(self, version_name=None, asset=None):
-        # TODO: Might need to find the information from the Turntable.main task, whether created or reused.
-        """
-        description = 'New version found in the remote folder.\nOriginal Filename: %s' % filename
-            version_data = {
-                'project': {'type': 'Project', 'id': proj_id},
-                'description': description,
-                'sg_status_list': 'rev',
-                'code': filename,
-                'entity': {'type': 'Asset', 'id': asset_id},
-                'sg_task': {'type': 'Task', 'id': task_id}
-            }
-
-            # Open the database
-            f = open(db, 'r')
-            read_db = js.load(f)
-            sg = Shotgun(shotgun_conf['url'], shotgun_conf['name'], shotgun_conf['key'])
-            new_version = sg.create('Version', version_data)
-            sg.upload_thumbnail('Version', new_version['id'], file_path)
-            sg.upload('Version', new_version['id'], file_path, field_name='sg_uploaded_movie', display_name=filename)
-        :return:
-        """
-        version_data = {}
+    def create_draft_version(self, version_name=None, layer=None):
+        version_title = '%s_%s' % (version_name, layer)
         data = {
             'project': {'type': 'Project', 'id': self.project_id},
             'description': 'Lazy Siouxsie Auto Turntable',
             'sg_status_list': 'rev',
-            'code': version_name,
-            'entity': {'type': 'Asset', 'id': asset_id},
-            'sg_task': {'type': 'Task', 'id': task_id}
+            'code': version_title,
+            'entity': {'type': 'Asset', 'id': self.entity_id},
+            'sg_task': {'type': 'Task', 'id': self.tt_task}
         }
+        version_data = self.sg.shotgun.create('Version', data)
         return version_data
 
     def submit_to_deadline(self, start=1, end=144, renderer=None, width=None, height=None, camera=None, layers=[]):
@@ -1174,6 +1160,10 @@ class LazySiouxsie(QtGui.QWidget):
             job_info_file = open(ji_filepath, 'w+')
             plugin_info_file = open(pi_filepath, 'w+')
 
+            # Create a Shotgun Version for Draft...
+            logger.info('Creating Shotgun Version for layer %s...' % lyr)
+            draft = self.create_draft_version(version_name=base_name, layer=lyr)
+
             # Setup JobInfo
             logger.debug('Collecting user, resolution, frames and pool data...')
             user_name = os.environ['USERNAME']
@@ -1192,9 +1182,6 @@ class LazySiouxsie(QtGui.QWidget):
             resolutionHeight *= resolution_scale
             resolutionWidth *= resolution_scale
 
-            # Create a Shotgun Version for Draft...
-            draft = self.create_draft_version(version_name=base_name, asset=task['Asset'])
-
             self.ui.build_progress.setValue(79)
             self.ui.status_label.setText('Create Job Info File...')
             logger.debug('Creating Job Info File...')
@@ -1209,12 +1196,6 @@ class LazySiouxsie(QtGui.QWidget):
             job_info += 'Blacklist=\n'
             job_info += 'MachineLimit=5\n'
             job_info += 'ScheduledStartDateTime=%s/%s/%s %s:%s\n' % (D, M, Y, h, m)
-            job_info += 'ExtraInfo0=%s\n' % task['task_name']
-            job_info += 'ExtraInfo1=%s\n' % project
-            job_info += 'ExtraInfo2=%s\n' % task['Asset']
-            job_info += 'ExtraInfo3=%s\n' % base_name
-            job_info += 'ExtraInfo4=Lazy Siouxsie Turntable\n'
-            job_info += 'ExtraInfo5=%s\n' % user_name
             # Draft Submission details
             job_info += 'ExtraInfoKeyValue0=UserName=%s\n' % user_name
             job_info += 'ExtraInfoKeyValue1=DraftFrameRate=24\n'
@@ -1226,16 +1207,16 @@ class LazySiouxsie(QtGui.QWidget):
             job_info += 'ExtraInfoKeyValue7=EntityName=%s\n' % task['Asset']
             job_info += 'ExtraInfoKeyValue8=EntityType=Asset\n'
             job_info += 'ExtraInfoKeyValue9=DraftType=movie\n'
-            job_info += 'ExtraInfoKeyValue10=VersionId=%s\n'  # Need to have shotgun create a version before hand! Fuck!
+            job_info += 'ExtraInfoKeyValue10=VersionId=%s\n' % draft['id']
             job_info += 'ExtraInfoKeyValue11=DraftColorSpaceIn=Identity\n'
             job_info += 'ExtraInfoKeyValue12=DraftColorSpaceOut=Identity\n'
-            job_info += 'ExtraInfoKeyValue13=VersionName=\n'  # Needs to actually be the turntable.main filename
+            job_info += 'ExtraInfoKeyValue13=VersionName=%s\n' % draft['code']
             job_info += 'ExtraInfoKeyValue14=TaskId=-1\n'
             job_info += 'ExtraInfoKeyValue15=ProjectId=%s\n' % self.project_id
             job_info += 'ExtraInfoKeyValue16=DraftUploadToShotgun=True\n'
             job_info += 'ExtraInfoKeyValue17=TaskName=None\n'
             job_info += 'ExtraInfoKeyValue18=DraftResolution=1\n'
-            job_info += 'ExtraInfoKeyValue19=EntityId=%s\n'  # Need to get the fuckin' Asset ID
+            job_info += 'ExtraInfoKeyValue19=EntityId=%s\n' % self.entity_id
             job_info += 'ExtraInfoKeyValue20=SubmitQuickDraft=True\n'
             # End Draft Submission details
             job_info += 'OverrideTaskExtraInfoNames=False\n'
