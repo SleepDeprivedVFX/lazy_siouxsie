@@ -456,7 +456,7 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.setAttr('%s.shadows' % material, 1)
                 cmds.setAttr('%s.affectAlpha' % material, 1)
                 cmds.setAttr('%s.alphaContribution' % material, -1)
-                cmds.setAttr('vraySettings.giOn', 1)
+                cmds.setAttr('vraySettings.giOn', 0)
                 cmds.setAttr('vraySettings.cam_overrideEnvtex', 1)
                 cmds.connectAttr('%s.outColor' % file_node, 'vraySettings.cam_envtexBg', f=True)
 
@@ -534,7 +534,7 @@ class LazySiouxsie(QtGui.QWidget):
                 self.ui.status_label.setText('Setting render quality...')
                 cmds.setAttr('vraySettings.samplerType', 4)
                 cmds.setAttr('vraySettings.minShadeRate', quality)
-                cmds.setAttr('vraySettings.giOn', 1)
+                cmds.setAttr('vraySettings.giOn', 0)
                 cmds.setAttr('vraySettings.cam_overrideEnvtex', 1)
                 cmds.setAttr('vraySettings.dmcMinSubdivs', 1)
                 cmds.setAttr('vraySettings.dmcMaxSubdivs', dmc_maxSubDivs)
@@ -1175,6 +1175,8 @@ class LazySiouxsie(QtGui.QWidget):
                     pool = p
                     break
 
+            version_name = '%s_%s' % (base_name, lyr)
+
             resolutionWidth = int(self.ui.res_width.text())
             resolutionHeight = int(self.ui.res_height.text())
             resolution_scale = self.ui.res_scale.currentText()
@@ -1197,7 +1199,18 @@ class LazySiouxsie(QtGui.QWidget):
             job_info += 'Blacklist=\n'
             job_info += 'MachineLimit=5\n'
             job_info += 'ScheduledStartDateTime=%s/%s/%s %s:%s\n' % (D, M, Y, h, m)
+            job_info += 'ExtraInfo0=%s\n' % task['task_name']
+            job_info += 'ExtraInfo1=%s\n' % project
+            job_info += 'ExtraInfo2=%s\n' % task['Asset']
+            job_info += 'ExtraInfo3=%s\n' % version_name
+            job_info += 'ExtraInfo4=Lazy Siouxsie Auto Turntable\n'
+            job_info += 'ExtraInfo5=%s\n' % user_name
             # Draft Submission details
+            # TODO: Rework the Draft Submission
+            # The following needs to be added after the main submission.
+            # Essentially, Submit the job, find the version ID that it created, and then amend the Job Properties with
+            # the following.  For now, it will just create 2 different versions that don't entirely work right.
+            # small price to pay for the moment.
             job_info += 'ExtraInfoKeyValue0=UserName=%s\n' % user_name
             job_info += 'ExtraInfoKeyValue1=DraftFrameRate=24\n'
             job_info += 'ExtraInfoKeyValue2=DraftExtension=mov\n'
@@ -1211,11 +1224,11 @@ class LazySiouxsie(QtGui.QWidget):
             job_info += 'ExtraInfoKeyValue10=VersionId=%s\n' % draft['id']
             job_info += 'ExtraInfoKeyValue11=DraftColorSpaceIn=Identity\n'
             job_info += 'ExtraInfoKeyValue12=DraftColorSpaceOut=Identity\n'
-            job_info += 'ExtraInfoKeyValue13=VersionName=%s\n' % draft['code']
+            job_info += 'ExtraInfoKeyValue13=VersionName=%s\n' % version_name
             job_info += 'ExtraInfoKeyValue14=TaskId=-1\n'
             job_info += 'ExtraInfoKeyValue15=ProjectId=%s\n' % self.project_id
             job_info += 'ExtraInfoKeyValue16=DraftUploadToShotgun=True\n'
-            job_info += 'ExtraInfoKeyValue17=TaskName=None\n'
+            job_info += 'ExtraInfoKeyValue17=TaskName=%s\n' % task['task_name']
             job_info += 'ExtraInfoKeyValue18=DraftResolution=1\n'
             job_info += 'ExtraInfoKeyValue19=EntityId=%s\n' % self.entity_id
             job_info += 'ExtraInfoKeyValue20=SubmitQuickDraft=True\n'
