@@ -134,7 +134,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.render_format = self._app.get_setting('output_format')
         logger.debug('Collected Turntable Configuration Settings.')
 
-        self.ground_plane = None
+        self.ground_plane = []
         self.scene_lights = None
         self.scene_selection = cmds.ls(sl=True)
         self.has_lights = self.check_scene_lights()
@@ -252,11 +252,12 @@ class LazySiouxsie(QtGui.QWidget):
             self.ui.build_progress.setValue(10)
             self.ui.status_label.setText('Selecting scene geometry...')
             geo = cmds.ls(type=['mesh', 'nurbsSurface'])
-            for g in geo:
-                if 'ground' in g.lower():
-                    geo.remove(g)
-                    cmds.select(g, r=True)
-                    cmds.hide()
+            if self.ground_plane:
+                for g in self.ground_plane:
+                    if g in geo:
+                        geo.remove(g)
+                cmds.select(self.ground_plane, r=True)
+                cmds.hide()
             cmds.select(geo, r=True)
             z = 1
             while z < 100:
@@ -346,12 +347,13 @@ class LazySiouxsie(QtGui.QWidget):
                 if cmds.about(q=True, v=True) < '2018':
                     ground_plane = cmds.polyPlane(h=radius, w=radius, ax=[0, 1, 0], ch=True, cuv=2,
                                                   n='_turntable_ground_plane', sx=10, sy=20)
+                    cmds.delete(ch=True)
                     self.texture_ground(ground=ground_plane, renderer=rendering_engine, file_node=hdri_dome['file'])
                 else:
                     cmds.polyDisc(s=4, sm=4, sd=3, r=radius)
                     cmds.rename('_turntable_ground_plane')
-                    ground_plane = cmds.ls(sl=True)[0]
                     cmds.delete(ch=True)
+                    ground_plane = cmds.ls(sl=True)[0]
                     self.texture_ground(ground=ground_plane, renderer=rendering_engine, file_node=hdri_dome['file'])
                 self.ui.build_progress.setValue(54)
                 self.ui.status_label.setText('Set the plane Position...')
@@ -362,6 +364,7 @@ class LazySiouxsie(QtGui.QWidget):
                 cmds.addAttr(ground_plane, ln='original_file', dt='string')
                 original_file = os.path.basename(self.ui.file_path.text())
                 cmds.setAttr('%s.original_file' % ground_plane, original_file, type='string')
+                self.ground_plane.append(ground_plane)
 
             self.ui.build_progress.setValue(55)
             self.ui.status_label.setText('Checking for Chrome Sphere creation...')
@@ -402,7 +405,7 @@ class LazySiouxsie(QtGui.QWidget):
 
             self.ui.build_progress.setValue(62)
             self.ui.status_label.setText('Begin Layers Setup...')
-            layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=ground_plane,
+            layers = self.setup_render_layers(dome=dome, file_node=file_node, ground=self.ground_plane,
                                               light_trans=light_trans, hdri_list=selected_hdri,
                                               lights=get_scene_lights[0], light_grp=get_scene_lights[1],  balls=spheres)
 
@@ -720,7 +723,7 @@ class LazySiouxsie(QtGui.QWidget):
             hdri_files.append(self.ui.custom_hdri.text())
         return hdri_files
 
-    def setup_render_layers(self, dome=None, file_node=None, ground=None, light_trans=None, hdri_list=None,
+    def setup_render_layers(self, dome=None, file_node=None, ground=[], light_trans=None, hdri_list=None,
                             lights=[], light_grp=None, balls=[]):
         layers = []
         self.ui.build_progress.setValue(63)
@@ -729,6 +732,21 @@ class LazySiouxsie(QtGui.QWidget):
         default_render_layer = rs.getDefaultRenderLayer()
         default_render_layer.setRenderable(False)
         # lights = list(lights)
+
+        new_ground = []
+        if self.ground_plane:
+            for g in self.ground_plane:
+                if cmds.nodeType(g) != 'transform':
+                    find_trans = cmds.listRelatives(g, p=True)
+                    for trans in find_trans:
+                        if cmds.nodeType(trans) == 'transform':
+                            new_ground.append(trans)
+                            break
+                else:
+                    new_ground.append(g)
+            ground_list = ', '.join(new_ground)
+        else:
+            ground_list = ''
 
         self.ui.build_progress.setValue(64)
         self.ui.status_label.setText('Collecting Turntable Geo...')
@@ -748,7 +766,8 @@ class LazySiouxsie(QtGui.QWidget):
                 render_layer = rs.createRenderLayer(base)
                 layers.append(base)
                 collection_set = render_layer.createCollection('Scene_%s' % base)
-                collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
+                collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' %
+                                                        (chrome_balls, ground_list))
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
@@ -764,7 +783,7 @@ class LazySiouxsie(QtGui.QWidget):
         if lights and self.ui.scene_lights.isChecked():
             render_layer = rs.createRenderLayer('Artist_Lights')
             collection_set = render_layer.createCollection('geo')
-            collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground))
+            collection_set.getSelector().setPattern('_Turntable_Set_Prep, %s, %s' % (chrome_balls, ground_list))
             light_collection = render_layer.createCollection('artist_lights')
             light_list = ''
             for light in lights:
@@ -1383,11 +1402,13 @@ class LazySiouxsie(QtGui.QWidget):
                            'tool from a model or lookdev file.')
             return False
         all_geo = cmds.ls(type=['mesh', 'nurbsSurface'])
+        grounds = []
         for geo in all_geo:
             if 'ground' in geo.lower():
-                self.ground_plane = geo
-                self.ui.ground_plane.setChecked(False)
-                logger.debug('Ground plane detected.  Turning off auto ground plane.')
-                break
+                grounds.append(geo)
+        if grounds:
+            self.ui.ground_plane.setChecked(False)
+            logger.debug('Ground plane detected.  Turning off auto ground plane.')
+            self.ground_plane = grounds
         return True
 
