@@ -1052,12 +1052,37 @@ class LazySiouxsie(QtGui.QWidget):
         # Get the new camera position
         new_cam_pos = cmds.xform(q=True, t=True, ws=True)
         # Calculate the decension angle from the center of the scene to the new camera position
+        # TODO: Adjust this so that low cam angles look higher, and higher ones look lower.
         self.ui.build_progress.setValue(30)
         self.ui.status_label.setText('Adjusting camera angle...')
         logger.info('Calculating the camera angle...')
-        cam_height = new_cam_pos[1] - bb_center[1]
+        # The camera height and distance are what is being used to create the angle calculation.
+        # The Height calculation can be "inaccurate" on purpose to create a greater angle.
+        # For instance, camera goes higher than 110% of the bounding box Y Max.
+        # The height from the center point is no longer valid, the height should be increased to make the camera look
+        # further down toward the base of the object at Y Min.
+        # Or if the camera goes below center, the height should increase to look up at Y Max
+        print '-' * 100
+        print new_cam_pos[1]
+        print bb_center[1]
+        print 'ABSOLUTE DIFF: %s' % ((new_cam_pos[1] - bb_center[1]) ** 2) ** 0.5
+
+        cam_height = ((new_cam_pos[1] - bb_center[1]) ** 2) ** 0.5
+        logger.info('cam_height = %s' % cam_height)
+
         cam_dist = new_cam_pos[2] - bb_center[2]
+        logger.info('cam_dist = %s' % cam_dist)
+        if new_cam_pos[1] < bb_center[1]:
+            limit = float(y_max) - bb_center[1]
+            logger.info('limit = %s' % limit)
+            overage = float(bb_center[1]) - new_cam_pos[1]
+            logger.info('overage = %s' % overage)
+            if overage > limit:
+                overage = limit
+            cam_height -= overage
+            logger.info('cam_height = %s' % cam_height)
         cam_angle = -1 * (math.degrees(math.atan(cam_height / cam_dist)))
+        logger.info('cam_angle = %s' % cam_angle)
         # Set the declination angle
         cmds.setAttr('%s.rx' % cam[0], cam_angle)
         # Group the camera, center the pivot, and animate the rotation
@@ -1084,12 +1109,10 @@ class LazySiouxsie(QtGui.QWidget):
         rot_range_type = self.ui.full_circle.isChecked()
         if rot_range_type:
             start_angle = 25.0
-            end_angle = -385.0
+            end_angle = -335.0
         else:
             start_angle = float(self.ui.from_range.text())
             end_angle = float(self.ui.to_range.text())
-            print start_angle
-            print end_angle
         if trans:
             cmds.setKeyframe('%s.ry' % trans, v=start_angle, ott='linear', t=start)
             cmds.setKeyframe('%s.ry' % trans, v=end_angle, itt='linear', t=end)
