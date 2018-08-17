@@ -351,6 +351,7 @@ class LazySiouxsie(QtGui.QWidget):
                     cmds.polyDisc(s=4, sm=4, sd=3, r=radius)
                     cmds.rename('_turntable_ground_plane')
                     ground_plane = cmds.ls(sl=True)[0]
+                    cmds.delete(ch=True)
                     self.texture_ground(ground=ground_plane, renderer=rendering_engine, file_node=hdri_dome['file'])
                 self.ui.build_progress.setValue(54)
                 self.ui.status_label.setText('Set the plane Position...')
@@ -1062,25 +1063,26 @@ class LazySiouxsie(QtGui.QWidget):
         # The height from the center point is no longer valid, the height should be increased to make the camera look
         # further down toward the base of the object at Y Min.
         # Or if the camera goes below center, the height should increase to look up at Y Max
-        print '-' * 100
-        print new_cam_pos[1]
-        print bb_center[1]
-        print 'ABSOLUTE DIFF: %s' % ((new_cam_pos[1] - bb_center[1]) ** 2) ** 0.5
+        # print '-' * 100
+        # print new_cam_pos[1]
+        # print bb_center[1]
+        # print 'ABSOLUTE DIFF: %s' % (new_cam_pos[1] - bb_center[1])
 
-        cam_height = ((new_cam_pos[1] - bb_center[1]) ** 2) ** 0.5
+        cam_height = (new_cam_pos[1] - bb_center[1])
         logger.info('cam_height = %s' % cam_height)
 
         cam_dist = new_cam_pos[2] - bb_center[2]
         logger.info('cam_dist = %s' % cam_dist)
-        if new_cam_pos[1] < bb_center[1]:
-            limit = float(y_max) - bb_center[1]
-            logger.info('limit = %s' % limit)
-            overage = float(bb_center[1]) - new_cam_pos[1]
-            logger.info('overage = %s' % overage)
-            if overage > limit:
-                overage = limit
-            cam_height -= overage
-            logger.info('cam_height = %s' % cam_height)
+        # Turning this off until I figure out if I really need it.
+        # if new_cam_pos[1] < bb_center[1]:
+        #     limit = float(y_max) - bb_center[1]
+        #     logger.info('limit = %s' % limit)
+        #     overage = float(bb_center[1]) - new_cam_pos[1]
+        #     logger.info('overage = %s' % overage)
+        #     if overage > limit:
+        #         overage = limit
+        #     cam_height -= (overage/4)
+        #     logger.info('cam_height = %s' % cam_height)
         cam_angle = -1 * (math.degrees(math.atan(cam_height / cam_dist)))
         logger.info('cam_angle = %s' % cam_angle)
         # Set the declination angle
