@@ -19,6 +19,12 @@ configuration:
         description: A list of Studio HDRIs
         allows_empty: True
 
+    hdri_settings:
+        type: str
+        default_value: "C:/Users/sleep/OneDrive/Documents/resources/hdri/hdri_settings.json"
+        description: The JSON document that sets up the various HDRI specific render settings.
+        allows_empty: True
+
     turntable_task:
         type: str
         default_value: turntable.main
