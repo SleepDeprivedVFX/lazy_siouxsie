@@ -33,12 +33,14 @@ import re
 from time import sleep
 import math
 from datetime import datetime
+import json
 
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
 from sgtk.platform.qt import QtCore, QtGui
 from .ui.lazy_siouxsie_ui import Ui_lazySiouxsie
 logger = sgtk.platform.get_logger(__name__)
+
 
 def show_dialog(app_instance):
     """
@@ -178,6 +180,7 @@ class LazySiouxsie(QtGui.QWidget):
         self.ui.pixel_aspect.setText(pixel_aspect)
         self.ui.rendering_engine.setCurrentText(renderers)
         hdri_path = self._app.get_setting('hdri_path')
+        hdri_settings = self._app.get_setting('hdri_settings')
         logger.debug('Shotgun Render Settings Collected.')
 
         if os.path.exists(hdri_path):
@@ -190,6 +193,11 @@ class LazySiouxsie(QtGui.QWidget):
                         hdri = QtGui.QListWidgetItem(f)
                         self.ui.hdriList.addItem(hdri)
                         self.ui.hdriList.setCurrentItem(hdri)
+        if os.path.exists(hdri_settings):
+            settings = open(hdri_settings, 'r')
+            self.hdri_setup = json.load(settings)
+        else:
+            self.hdri_setup = None
         file_to_send = cmds.file(q=True, sn=True)
         self.ui.file_path.setText(file_to_send)
         self.ui.file_path.setEnabled(False)
@@ -728,6 +736,7 @@ class LazySiouxsie(QtGui.QWidget):
         layers = []
         self.ui.build_progress.setValue(63)
         self.ui.status_label.setText('Setting up render layers...')
+        renderer = self.ui.rendering_engine.currentText()
         rs = renderSetup.instance()
         default_render_layer = rs.getDefaultRenderLayer()
         default_render_layer.setRenderable(False)
@@ -771,6 +780,25 @@ class LazySiouxsie(QtGui.QWidget):
                 rs.switchToLayer(render_layer)
                 utils.createAbsoluteOverride(file_node, 'fileTextureName')
                 cmds.setAttr('%s.fileTextureName' % file_node, hdri, type='string')
+                if self.hdri_setup:
+                    extra_settings = self.hdri_setup[basename]
+                    settings = extra_settings[renderer]
+                    for setting in settings:
+                        node = setting['node']
+                        if node == 'light':
+                            utils.createAbsoluteOverride(dome, setting['setting'])
+                            if setting['type']:
+                                cmds.setAttr('%s.%s' % (dome, setting['setting']), setting['value'],
+                                             type=setting['type'])
+                            else:
+                                cmds.setAttr('%s.%s' % (dome, setting['setting']), setting['value'])
+                        elif node == 'file':
+                            utils.createAbsoluteOverride(file_node, setting['setting'])
+                            if setting['type']:
+                                cmds.setAttr('%s.%s' % (file_node, setting['setting']), setting['value'],
+                                             type=setting['type'])
+                            else:
+                                cmds.setAttr('%s.%s' % (file_node, setting['setting']), setting['value'])
 
                 if lights:
                     utils.createAbsoluteOverride(light_trans, 'visibility')
